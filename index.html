@@ -1,10 +1,367 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Вся жизнь напоказ: что делать, если лайки важнее безопасности?</title>
-  </head>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Групповая родительская консультация</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, -apple-system, sans-serif; min-height: 100vh; background: linear-gradient(135deg, #667eea, #764ba2); display: flex; flex-direction: column; }
+    .slide-container { flex: 1; position: relative; overflow: hidden; }
+    .slide { position: absolute; inset: 0; transition: all 0.5s ease-in-out; padding: 2rem; display: flex; flex-direction: column; }
+    .slide.stable { transform: translateX(0); opacity: 1; }
+    .slide.exiting-next { transform: translateX(-10%); opacity: 0; }
+    .slide.exiting-prev { transform: translateX(10%); opacity: 0; }
+    .slide.entering-next { transform: translateX(100%); opacity: 0; }
+    .slide.entering-prev { transform: translateX(-100%); opacity: 0; }
+    .nav-bar { background: rgba(255,255,255,0.8); backdrop-filter: blur(4px); box-shadow: 0 -4px 6px rgba(0,0,0,0.1); padding: 1rem; }
+    .nav-inner { max-width: 80rem; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; }
+    .nav-btn { padding: 0.75rem 1.5rem; border: none; border-radius: 0.5rem; font-weight: 600; cursor: pointer; font-size: 1rem; }
+    .nav-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .nav-btn.prev { background: #1f2937; color: white; }
+    .nav-btn.next { background: #2563eb; color: white; }
+    .dots { display: flex; gap: 0.25rem; flex-wrap: wrap; justify-content: center; }
+    .dot { width: 2.5rem; height: 2.5rem; border-radius: 50%; border: none; font-weight: 600; cursor: pointer; background: #e5e7eb; color: #374151; transition: all 0.2s; font-size: 0.875rem; }
+    .dot.active { background: #2563eb; color: white; transform: scale(1.1); }
+    .info-bar { max-width: 80rem; margin: 0.75rem auto 0; text-align: center; font-size: 0.875rem; color: #4b5563; }
+    h1 { font-size: 3.25rem; font-weight: 700; }
+    h2 { font-size: 3.875rem; font-weight: 700; }
+    h3 { font-size: 2.25rem; font-weight: 700; }
+    .card { background: white; padding: 1.5rem; border-radius: 0.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    .stat-card { background: white; padding: 1.5rem; border-radius: 0.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-left: 4px solid #3b82f6; }
+    .speech-box { background: linear-gradient(135deg, #1f2937, #111827); color: white; padding: 1.5rem; border-radius: 0.5rem; margin-top: 1.5rem; }
+    .speech-box .label { font-size: 4.875rem; font-weight: 600; margin-bottom: 0.5rem; }
+    .speech-box p { font-size: 3rem; line-height: 1.6; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; flex: 1; }
+    .col-blue { background: #eff6ff; padding: 1.5rem; border-radius: 0.5rem; }
+    .col-purple { background: #faf5ff; padding: 1.5rem; border-radius: 0.5rem; }
+    .col-blue h3 { color: #1e3a5f; margin-bottom: 1rem; }
+    .col-purple h3 { color: #581c87; margin-bottom: 1rem; }
+    .col-blue li, .col-purple li { margin-bottom: 0.75rem; display: flex; align-items: flex-start; }
+    .col-blue li span:first-child { color: #3b82f6; margin-right: 0.75rem; }
+    .col-purple li span:first-child { color: #a855f7; margin-right: 0.75rem; }
+    .warning-box { background: #fef9c3; padding: 1rem; border-radius: 0.5rem; border-left: 4px solid #eab308; margin-top: 1.5rem; }
+    .level-card { padding: 1.5rem; border-radius: 0.5rem; border-width: 2px; border-style: solid; }
+    .level-card.yellow { background: #fef9c3; border-color: #facc15; }
+    .level-card.orange { background: #ffedd5; border-color: #fb923c; }
+    .level-card.red { background: #fee2e2; border-color: #f87171; }
+    .level-card.purple { background: #f3e8ff; border-color: #c084fc; }
+    .level-card.yellow h3 { color: #713f12; }
+    .level-card.orange h3 { color: #7c2d12; }
+    .level-card.red h3 { color: #7f1d1d; }
+    .level-card.purple h3 { color: #581c87; }
+    .level-card li { display: flex; align-items: flex-start; margin-bottom: 0.5rem; }
+    .level-card li span:first-child { margin-right: 0.75rem; }
+    .scenario-card { background: white; padding: 1.5rem; border-radius: 0.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-top: 4px solid #ef4444; }
+    .phrase-card { padding: 1.5rem; border-radius: 0.5rem; border-left: 4px solid; }
+    .phrase-card.green { background: #f0fdf4; border-color: #22c55e; }
+    .phrase-card.blue { background: #eff6ff; border-color: #3b82f6; }
+    .phrase-card.yellow { background: #fefce8; border-color: #eab308; }
+    .phrase-card.orange { background: #fff7ed; border-color: #f97316; }
+    .phrase-card.pink { background: #fdf2f8; border-color: #ec4899; }
+    .phrase-card.red { background: #fef2f2; border-color: #ef4444; }
+    .qa-item { background: white; border-radius: 0.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 1rem; overflow: hidden; }
+    .qa-q { padding: 1rem; cursor: pointer; font-weight: 600; color: #111827; background: white; border: none; width: 100%; text-align: left; font-size: 1rem; display: flex; align-items: center; }
+    .qa-q:hover { background: #f9fafb; }
+    .qa-a { padding: 0 1rem 1rem; color: #374151; display: none; border-top: 1px solid #e5e7eb; }
+    .qa-a.show { display: block; padding-top: 0.75rem; }
+    .conclusion-bg { background: linear-gradient(135deg, #312e81, #581c87, #831843); color: white; }
+    .conclusion-box { background: rgba(255,255,255,0.1); padding: 1.5rem; border-radius: 0.5rem; margin-bottom: 1.5rem; }
+    .conclusion-box h3 { margin-bottom: 1rem; }
+    .conclusion-box li { display: flex; align-items: flex-start; margin-bottom: 0.75rem; }
+    .conclusion-box.yellow { border: 2px solid #facc15; background: rgba(255,255,255,0.2); }
+    .conclusion-speech { background: rgba(0,0,0,0.3); padding: 1.5rem; border-radius: 0.5rem; margin-top: 1.5rem; }
+    .scrollable { overflow-y: auto; flex: 1; }
+    .space-y > * + * { margin-top: 1rem; }
+    .space-y-4 > * + * { margin-top: 1.5rem; }
+    .space-y-6 > * + * { margin-top: 1.5rem; }
+    ul { list-style: none; }
+    .title-slide { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; padding: 3rem; }
+    .title-slide h1 { color: white; margin-bottom: 1.5rem; }
+    .title-slide h2 { color: white; background: rgba(255,255,255,0.1); padding: 1.5rem; border-radius: 0.5rem; margin-bottom: 2rem; font-size: 1.5rem; }
+    .title-slide .info { background: rgba(255,255,255,0.2); padding: 2rem; border-radius: 0.5rem; color: white; margin-top: 3rem; }
+    .title-slide .info p { font-size: 1.25rem; margin-bottom: 1rem; }
+    .case-box { background: #eff6ff; padding: 2rem; border-radius: 0.5rem; border-left: 4px solid #3b82f6; }
+    .clinical-box { background: #faf5ff; padding: 1.5rem; border-radius: 0.5rem; border-left: 4px solid #a855f7; }
+    .video-box { background: #1f2937; color: white; padding: 3rem; border-radius: 0.5rem; text-align: center; }
+    .check-item { display: flex; align-items: flex-start; margin-bottom: 0.75rem; }
+    .check-item .icon { color: #16a34a; margin-right: 0.75rem; }
+  </style>
+</head>
+<body>
+  <div class="slide-container" id="slideContainer"></div>
+  <div class="nav-bar">
+    <div class="nav-inner">
+      <button class="nav-btn prev" id="prevBtn" onclick="prevSlide()">← Назад</button>
+      <div class="dots" id="dots"></div>
+      <button class="nav-btn next" id="nextBtn" onclick="nextSlide()">Вперёд →</button>
+    </div>
+    <div class="info-bar">
+      <span id="slideInfo">Слайд 1 из 12</span>
+      <span style="margin: 0 0.5rem;">•</span>
+      <span>← → для навигации</span>
+    </div>
+  </div>
+
+  <script>
+    const slides = [
+      {
+        id: 1, title: "Групповая родительская консультация", subtitle: "«Вся жизнь напоказ незнакомцам: что делать, если лайки важнее безопасности?»", type: 'title'
+      },
+      {
+        id: 2, title: "Почему это важно?", type: 'stats',
+        stats: [
+          { icon: '📊', text: 'Более 70 % подростков 13–17 лет ежедневно публикуют личный контент в социальных сетях' },
+          { icon: '🔓', text: 'Каждый третий подросток хотя бы раз делился информацией, которую позже хотел удалить' },
+          { icon: '⚠️', text: 'Гиперобщительность — коммуникативная девиация, при которой потребность в признании подавляет критическое мышление и чувство безопасности' },
+          { icon: '🔺', text: 'Без коррекции гиперобщительность не остаётся на одном уровне — она эскалирует, порождая всё более опасные формы поведения' },
+          { icon: '🎯', text: 'Задача консультации — показать, во что может перерасти безобидная, на первый взгляд, «общительность»' }
+        ],
+        speech: "Проблема не только в том, что ребёнок много общается. Гиперобщительность — это прогрессирующее отклонение. Если его не заметить и не скорректировать, оно не \"пройдёт само\", а перерастёт в гораздо более опасные формы поведения. Сегодня мы разберём, что именно может произойти и как этого не допустить."
+      },
+      {
+        id: 3, title: "Что случилось?", type: 'case',
+        caseText: "Пример из фильма Ингрид едет на запад",
+        clinical: "К какому виду девиаций вы бы отнесли данный фрагмент?"
+      },
+      {
+        id: 4, title: "Как это проявляется и почему возникает?", type: 'twocolumns',
+        leftTitle: "🔍 Характерные признаки", rightTitle: "🧩 Возможные причины",
+        leftItems: ['Неумение находиться в одиночестве', 'Болтливость, нефильтрованный речевой поток', 'Стремление быть в центре внимания любой ценой', 'Неумение слушать собеседника → конфликты', 'Использование других как «зеркала» для самовыражения', 'Отсутствие настроек приватности'],
+        rightItems: ['Дефицит эмоционального тепла в семье (гипоопека)', 'Попытки избежать одиночества и скуки', 'Нестабильная самооценка', 'Вымещение стресса через общение', 'СДВГ, тревожное расстройство', 'Тип воспитания: эмоциональное отвержение / гипоопека'],
+        warning: 'Главный парадокс: Ребёнок стремится к самостоятельности, но при этом максимально уязвим для манипуляций со стороны взрослых незнакомцев в сети.',
+        speech: "Подросток уязвим вдвойне. С одной стороны, ему нужно признание — и лайки дают его мгновенно. С другой — он чувствует себя неуязвимым: \"Со мной такого не случится\". Он не фильтрует речь, не осознаёт последствий и воспринимает сеть как территорию свободы от родителей. Именно поэтому гиперобщительность в подростковом возрасте так быстро перерастает в опасные формы."
+      },
+      {
+        id: 5, title: "«Просто общительность»? Куда она ведёт", type: 'escalation',
+        levels: [
+          { color: 'yellow', title: 'УРОВЕНЬ 1: «Безобидная общительность»', items: ['Много времени в чатах и соцсетях', 'Большое количество «друзей», которых ребёнок не знает лично', 'Частые публикации, желание получать лайки'] },
+          { color: 'orange', title: 'УРОВЕНЬ 2: Разглашение личных данных', items: ['Ребёнок публикует адрес, школу, расписание, обстановку квартиры', 'В прямых эфирах рассказывает о конфликтах с родителями, первой влюблённости, интимных переживаниях', 'Не использует настройки приватности — профиль открыт для всех', 'Незнакомые люди знают о ребёнке больше, чем родители'] },
+          { color: 'red', title: 'УРОВЕНЬ 3: Жизнь «напоказ»', items: ['Вся личная жизнь переносится в онлайн — ребёнок не различает публичное и приватное', 'Регулярные стримы с откровениями ради донатов и подписчиков', 'Формируется зависимость от виртуальной аудитории — без эфиров чувствует пустоту', 'Ребёнок начинает провоцировать скандалы, чтобы было «что рассказать» зрителям'] },
+          { color: 'purple', title: 'УРОВЕНЬ 4: Реальные угрозы безопасности', items: ['Сталкинг — незнакомцы, знающие адрес и распорядок, начинают преследовать ребёнка', 'Шантаж и манипуляции — интимные откровения используются против ребёнка', 'Вовлечение в деструктивные сообщества — «друзья» из сети втягивают в опасные группы', 'Мошенничество — доверие к незнакомцам приводит к финансовым и эмоциональным потерям', 'Кибербуллинг — публичные откровения становятся материалом для травли'] }
+        ],
+        speech: "Вот что важно понять: гиперобщительность — это не статичная проблема, это лестница. Сначала — просто много \"друзей\" в сети. Потом — ребёнок начинает делиться адресом, школой, конфликтами с вами. Дальше — вся жизнь переносится в онлайн, и без стрима ребёнок чувствует пустоту. И на верхней ступени — реальные угрозы: сталкинг, шантаж, вовлечение в деструктивные группы. В нашем кейсе девочка уже находится на втором-третьем уровне. И без вмешательства она неизбежно движется вверх."
+      },
+      {
+        id: 6, title: "Реальные сценарии: что может произойти", type: 'scenarios',
+        scenarios: [
+          { icon: '📍', title: 'СЦЕНАРИЙ 1: СТАЛКИНГ', text: 'Девочка в эфире показывает вид из окна, форму школы, рассказывает, во сколько возвращается домой. Незнакомый подписчик вычисляет адрес и начинает появляться рядом со школой или домом. Ребёнок пугается, но боится рассказать родителям, потому что «сама виновата».' },
+          { icon: '🔓', title: 'СЦЕНАРИЙ 2: ШАНТАЖ ЛИЧНЫМИ ДАННЫМИ', text: 'В прямом эфире девочка делится историей первой влюблённости, называет имена, показывает переписки. Один из зрителей сохраняет записи и угрожает разослать их одноклассникам или выложить на публичные форумы, если она не выполнит его требования.' },
+          { icon: '🕸️', title: 'СЦЕНАРИЙ 3: ВЕРБОВКА В ДЕСТРУКТИВНЫЕ СООБЩЕСТВА', text: '«Друзья» из сети проявляют сочувствие, выслушивают жалобы на родителей. Постепенно втягивают в закрытую группу с деструктивной идеологией, где «понимают и принимают». Ребёнок отдаляется от реальных близких.' },
+          { icon: '💸', title: 'СЦЕНАРИЙ 4: МОШЕННИЧЕСТВО И ЭКСПЛУАТАЦИЯ', text: 'Незнакомый подписчик присылает крупные донаты, завоёвывает доверие. Затем просит "одолжить" данные банковской карты родителей или сделать «одну маленькую услугу» — отправить компрометирующее фото.' }
+        ],
+        speech: "Это не фантазии — это реальные сценарии, которые происходят с подростками ежедневно. Сталкинг, шантаж, вербовка в деструктивные группы, мошенничество — всё это начинается с того, что ребёнок \"просто делится жизнью\" с незнакомцами в сети. Обратите внимание: в каждом сценарии ребёнок боится рассказать родителям. Именно поэтому критически важно сохранять доверие, а не ставить ультиматумы."
+      },
+      {
+        id: 7, title: "Почему именно подросток так уязвим?", type: 'twocolumns',
+        leftTitle: "🧠 Особенности возраста", rightTitle: "⚡ Как это усиливает эскалацию",
+        leftItems: ['Гормональные изменения → усиленная потребность в признании', 'Поиск идентичности → «Кто я? Чем я интересен?»', 'Давление сверстников → «Все так делают»', 'Сниженные процессы торможения', 'Склонность к риску, ощущение «неуязвимости»', 'Потребность в автономии от родителей'],
+        rightItems: ['Лайки и комментарии дают мгновенный выброс дофамина — формируется зависимость', 'Ребёнок конструирует «я» через реакции аудитории, а не через реальный опыт', 'Нормализация раскрытия личной жизни в сети: «Если все стримят — значит, это нормально»', 'Не может остановиться: говорит и публикует раньше, чем думает', '«Со мной такого не случится» — не осознаёт опасность сталкинга и шантажа', 'Сеть становится «территорией свободы», куда родители не допускаются'],
+        warning: 'Главный парадокс: Ребёнок стремится к самостоятельности, но при этом максимально уязвим для манипуляций со стороны взрослых незнакомцев в сети.',
+        speech: "Подросток уязвим вдвойне. С одной стороны, ему нужно признание — и лайки дают его мгновенно. С другой — он чувствует себя неуязвимым: \"Со мной такого не случится\". Он не фильтрует речь, не осознаёт последствий и воспринимает сеть как территорию свободы от родителей. Именно поэтому гиперобщительность в подростковом возрасте так быстро перерастает в опасные формы."
+      },
+      {
+        id: 8, title: "С чем вы столкнулись?", type: 'stats',
+        stats: [
+          { icon: '👁️', text: '«Не замечали вовремя» — поведение казалось «просто общительностью»' },
+          { icon: '🗣️', text: '«Начали разговор — получили конфликт» — запреты закрывают путь к доверию' },
+          { icon: '🤷', text: '«Не могу отличить норму от проблемы» — где грань между экспериментом и угрозой?' },
+          { icon: '💻', text: '«Ограничил интернет — потерял контакт» — жёсткие запреты разрушают отношения' },
+          { icon: '❓', text: '«Не знаю, к кому обратиться» — чувство беспомощности' }
+        ]
+      },
+      {
+        id: 9, title: "Что делать на каждом уровне?", type: 'recommendations',
+        levels: [
+          { color: 'yellow', title: 'На уровне 1 (много «друзей», лайки)', items: ['Разговор о цифровом следе: «То, что ты публикуешь, остаётся навсегда»', 'Совместная проверка списка друзей: «Скольких из них ты знаешь лично?»', 'Предложить офлайн-хобби как альтернативный источник признания'] },
+          { color: 'orange', title: 'На уровне 2 (разглашение личных данных)', items: ['Совместная настройка приватности — не за ребёнка, а вместе с ним', '«Тест незнакомца»: «Если бы этот человек подошёл к тебе на улице — ты бы рассказала ему то же самое?»', 'Ввести правило: «Прежде чем опубликовать — расскажи мне»'] },
+          { color: 'red', title: 'На уровне 3 (жизнь «напоказ», зависимость)', items: ['Временное ограничение стримов — как компромисс, а не наказание', 'Обращение к школьному психологу', '«Эксперимент тишины»: 24 часа без соцсетей с поддержкой родителя (совместный досуг)'] },
+          { color: 'purple', title: 'На уровне 4 (сталкинг, шантаж, угрозы)', items: ['Немедленно — сохранить доказательства (скриншоты, переписки)', 'Обращение в полицию и на горячую линию (8-800-2000-122)', 'Семейный психолог для восстановления доверия и проработки травмы'] }
+        ],
+        speech: "Действия зависят от уровня, на котором находится ваш ребёнок. На начальном этапе достаточно разговора и совместной настройки профиля. Если ребёнок уже публикует личные данные — вводим правило \"сначала расскажи мне\". Если есть зависимость от стримов — подключаем специалиста. А если появились реальные угрозы — сохраняем доказательства и обращаемся в полицию. Главное: на каждом уровне сохраняем диалог и доверие."
+      },
+      {
+        id: 10, title: "Что говорить ребёнку? Речевой лист", type: 'phrases',
+        phrases: [
+          { color: 'green', text: '«Я вижу, что тебе важно, чтобы тебя замечали. Давай вместе подумаем, где ещё ты можешь получать внимание и поддержку.»', note: '→ Признаём потребность, не обесцениваем' },
+          { color: 'blue', text: '«Я не запрещаю интернет, но я волнуюсь, когда незнакомые люди знают о тебе больше, чем я.»', note: '→ Выражаем беспокойство без давления' },
+          { color: 'yellow', text: '«Давай договоримся: прежде чем делиться личным в открытом эфире, ты можешь сначала рассказать мне. Я постараюсь услышать без критики.»', note: '→ Предлагаем себя как безопасное пространство' },
+          { color: 'orange', text: '«Представь, что этот человек из интернета стоит перед тобой на улице. Ты бы рассказала ему то же самое?»', note: '→ Развиваем критическое мышление через конкретный образ' },
+          { color: 'pink', text: '«Если кто-то из сети начнёт тебя пугать, требовать что-то или угрожать — ты можешь прийти ко мне. Я не буду ругать. Мы разберёмся вместе.»', note: '→ Открываем путь к доверию при эскалации' },
+          { color: 'red', text: '«Ты важна не за лайки, а сама по себе. Я хочу, чтобы ты это чувствовала не только в интернете, но и здесь, дома.»', note: '→ Даём безусловное принятие' }
+        ],
+        speech: "Обратите внимание на две новые фразы. \"Представь, что этот человек стоит перед тобой на улице\" — помогает ребёнку перевести виртуальное в реальное и осознать масштаб откровенности. А фраза \"Если кто-то начнёт пугать — приходи ко мне, я не буду ругать\" — критически важна для ситуаций шантажа и сталкинга. Ребёнок должен знать, что дорога домой всегда открыта."
+      },
+      {
+        id: 11, title: "Ваши вопросы — наши ответы", type: 'qa',
+        questions: [
+          { q: 'Как узнать, что проблема уже появилась?', a: 'Рост времени в сети → раздражительность при ограничениях → скрытность → обнаруживаете ребёнка в открытых эфирах с незнакомцами.' },
+          { q: 'Как начать разговор без конфликта?', a: '«Я»-высказывания: «Я заметил(а)… Мне важно…». Без оценок. Давать говорить ребёнку.' },
+          { q: 'Как отличить эксперимент от угрозы?', a: 'Эксперимент: есть контроль, адекватная реакция на просьбы. Угроза: нет фильтра, множество незнакомцев, неспособность остановиться.' },
+          { q: 'К кому обращаться?', a: 'Школьный психолог → педагог-психолог → семейный консультант → полиция (при угрозах).' },
+          { q: 'Как ограничить интернет без разрушения отношений?', a: 'Ограничение = компромисс. Совместное обсуждение, временные рамки, конкретная цель для снятия.' }
+        ]
+      },
+      {
+        id: 12, title: "Итоги и перспективы", type: 'conclusion',
+        findings: ['Гиперобщительность — это прогрессирующая коммуникативная девиация', 'Без коррекции она эскалирует: от «много друзей в сети» → через разглашение личных данных → к жизни «напоказ» → и вплоть до сталкинга, шантажа, вербовки', 'Каждый уровень эскалации требует своих мер реагирования', 'Ключевой фактор успешной коррекции — сохранение доверия между родителем и ребёнком'],
+        application: ['Использовать «лестницу эскалации» как диагностический инструмент: определить, на каком уровне ребёнок, и действовать соответственно', 'Применять речевые техники для развития критического мышления у подростков', 'Выстраивать партнёрство «педагог — родитель — ребёнок»', 'Проводить профилактические беседы до появления проблемы'],
+        mainConclusion: 'Гиперобщительность — это не «характер», а сигнал. И это сигнал, который усиливается. Чем раньше мы его услышим, тем меньше ступеней ребёнок успеет пройти на пути к реальной опасности.',
+        speech: "Главное, что я хочу, чтобы вы запомнили: гиперобщительность не стоит на месте. Она растёт, как снежный ком. Сегодня ребёнок \"просто стримит\", а завтра незнакомец знает его адрес. Но на каждом уровне есть инструменты, которые мы разобрали. И самый важный из них — это не запреты, не контроль, а доверие. Если ребёнок знает, что может прийти к вам без страха наказания — вы услышите о проблеме вовремя. Спасибо за внимание!"
+      }
+    ];
+
+    let currentSlide = 0;
+    let animState = 'stable';
+    let animDir = 'next';
+    let animTimeout = null;
+
+    function goToSlide(index) {
+      if (index < 0 || index >= slides.length || index === currentSlide) return;
+      animDir = index > currentSlide ? 'next' : 'prev';
+      animState = 'exiting';
+      if (animTimeout) clearTimeout(animTimeout);
+      render();
+      animTimeout = setTimeout(() => {
+        currentSlide = index;
+        animState = 'entering';
+        render();
+        setTimeout(() => { animState = 'stable'; render(); }, 500);
+      }, 500);
+    }
+
+    function nextSlide() { goToSlide(currentSlide + 1); }
+    function prevSlide() { goToSlide(currentSlide - 1); }
+
+    function getSlideClass() {
+      if (animState === 'exiting') return animDir === 'next' ? 'exiting-next' : 'exiting-prev';
+      if (animState === 'entering') return animDir === 'next' ? 'entering-next' : 'entering-prev';
+      return 'stable';
+    }
+
+    function renderSlide(slide) {
+      switch (slide.type) {
+        case 'title':
+          return `<div class="title-slide">
+            <div style="margin-bottom:2rem;"><span style="font-size:5rem;">📱</span></div>
+            <h1>Групповая родительская консультация</h1>
+            <h2>«Вся жизнь напоказ незнакомцам:<br/>что делать, если лайки важнее безопасности?»</h2>
+            <div class="info">
+              <p><strong>Преподаватель:</strong> Шайдулин Дмитрий</p>
+            </div>
+          </div>`;
+
+        case 'case':
+          return `<div style="height:100%;display:flex;flex-direction:column;padding:2rem;">
+            <h2 style="margin-bottom:2rem;color:#1f2937;">${slide.title}</h2>
+            <div class="space-y-6" style="flex:1;">
+              <div class="case-box"><p style="font-size:1.75rem;color:#1f2937;font-style:italic;">"${slide.caseText}"</p></div>
+              <div class="clinical-box"><p style="font-size:1.725rem;color:#1f2937;"><strong></strong> ${slide.clinical}</p></div>
+            </div>
+          </div>`;
+
+        case 'stats':
+          return `<div style="height:100%;display:flex;flex-direction:column;padding:2rem;">
+            <h2 style="margin-bottom:2rem;color:#1f2937;">${slide.title}</h2>
+            <div class="scrollable">
+              <div class="space-y-4">
+                ${slide.stats.map(s => `<div class="stat-card"><div style="display:flex;align-items:flex-start;"><span style="font-size:2rem;margin-right:1rem;">${s.icon}</span><p style="font-size:1.725rem;color:#374151;">${s.text}</p></div></div>`).join('')}
+              </div>
+            </div>
+          </div>`;
+          
+        case 'twocolumns':
+          return `<div style="height:100%;display:flex;flex-direction:column;padding:2rem;">
+            <h2 style="margin-bottom:1.5rem;color:#1f2937;">${slide.title}</h2>
+            <div class="two-col">
+              <div class="col-blue"><h3>${slide.leftTitle}</h3><div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">${slide.leftItems.map(i => `<div style="background:white;padding:1rem;border-radius:0.5rem;box-shadow:0 2px 4px rgba(0,0,0,0.1);display:flex;align-items:flex-start;"><span style="color:#3b82f6;margin-right:0.5rem;">•</span><span style="color:#374151;">${i}</span></div>`).join('')}</div></div>
+              <div class="col-purple"><h3>${slide.rightTitle}</h3><div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">${slide.rightItems.map(i => `<div style="background:white;padding:1rem;border-radius:0.5rem;box-shadow:0 2px 4px rgba(0,0,0,0.1);display:flex;align-items:flex-start;"><span style="color:#a855f7;margin-right:0.5rem;">•</span><span style="color:#374151;">${i}</span></div>`).join('')}</div></div>
+            </div>
+            ${slide.warning ? `<div class="warning-box"><p style="color:#1f2937;"><strong>⚠️ ${slide.warning}</strong></p></div>` : ''}
+          </div>`;
+
+        case 'escalation':
+          return `<div style="height:100%;display:flex;flex-direction:column;padding:2rem;">
+            <h2 style="margin-bottom:1.5rem;color:#1f2937;">${slide.title}</h2>
+            <div style="flex:1;display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-content:start;">
+              ${slide.levels.map(l => `<div class="level-card ${l.color}"><h3 style="margin-bottom:1rem;">${l.title}</h3><ul>${l.items.map(i => `<li><span>→</span><span style="font-size:1.35rem;color:#374151;">${i}</span></li>`).join('')}</ul></div>`).join('')}
+            </div>
+          </div>`;
+
+        case 'scenarios':
+          return `<div style="height:100%;display:flex;flex-direction:column;padding:2rem;">
+            <h2 style="margin-bottom:1.5rem;color:#1f2937;">${slide.title}</h2>
+            <div style="flex:1;display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+              ${slide.scenarios.map(s => `<div class="scenario-card"><div style="display:flex;align-items:flex-start;margin-bottom:1rem;"><span style="font-size:2.5rem;margin-right:1rem;">${s.icon}</span><h3 style="color:#111827;">${s.title}</h3></div><p style="color:#374151;">${s.text}</p></div>`).join('')}
+            </div>
+          </div>`;
+
+        case 'recommendations':
+          return `<div style="height:100%;display:flex;flex-direction:column;padding:2rem;">
+            <h2 style="margin-bottom:1.5rem;color:#1f2937;">${slide.title}</h2>
+            <div style="flex:1;display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+              ${slide.levels.map(l => `<div class="level-card ${l.color}"><h3 style="margin-bottom:1rem;">${l.title}</h3><ul>${l.items.map(i => `<li class="check-item"><span class="icon">✓</span><span style="color:#374151;">${i}</span></li>`).join('')}</ul></div>`).join('')}
+            </div>
+          </div>`;
+
+        case 'phrases':
+          return `<div style="height:100%;display:flex;flex-direction:column;padding:2rem;">
+            <h2 style="margin-bottom:1.5rem;color:#1f2937;">${slide.title}</h2>
+            <div class="scrollable space-y-4">
+              ${slide.phrases.map(p => `<div class="phrase-card ${p.color}"><p style="font-size:1.125rem;color:#1f2937;font-style:italic;margin-bottom:0.5rem;">${p.text}</p><p style="font-size:0.875rem;color:#6b7280;">${p.note}</p></div>`).join('')}
+            </div>
+          </div>`;
+
+        case 'qa':
+          return `<div style="height:100%;display:flex;flex-direction:column;padding:2rem;">
+            <h2 style="margin-bottom:1.5rem;color:#1f2937;">${slide.title}</h2>
+            <div class="scrollable space-y-4">
+              ${slide.questions.map((qa, i) => `<div class="qa-item"><button class="qa-q" onclick="toggleQA(${i})"><span style="margin-right:0.5rem;">❓</span> ${qa.q}</button><div class="qa-a" id="qa-${i}"><p style="color:#374151;"><strong>✅ ${qa.a}</strong></p></div></div>`).join('')}
+            </div>
+          </div>`;
+
+        case 'conclusion':
+          return `<div style="height:100%;display:flex;flex-direction:column;padding:2rem;" class="conclusion-bg">
+            <h2 style="margin-bottom:1.5rem;">${slide.title}</h2>
+            <div style="flex:1;" class="space-y-6">
+              <div class="conclusion-box"><h3>📌 Что мы выяснили:</h3><ul>${slide.findings.map(i => `<li><span style="color:#facc15;margin-right:0.75rem;">•</span><span>${i}</span></li>`).join('')}</ul></div>
+              <div class="conclusion-box"><h3>🔮 Как применять:</h3><ul>${slide.application.map(i => `<li><span style="color:#4ade80;margin-right:0.75rem;">✓</span><span>${i}</span></li>`).join('')}</ul></div>
+              <div class="conclusion-box yellow"><p style="font-size:1.125rem;"><strong>🔑 Главный вывод:</strong> ${slide.mainConclusion}</p></div>
+            </div>
+          </div>`;
+
+        default: return '';
+      }
+    }
+
+    function toggleQA(index) {
+      const el = document.getElementById('qa-' + index);
+      el.classList.toggle('show');
+    }
+
+    function render() {
+      const container = document.getElementById('slideContainer');
+      const slide = slides[currentSlide];
+      container.innerHTML = `<div class="slide ${getSlideClass()}">${renderSlide(slide)}</div>`;
+
+      document.getElementById('prevBtn').disabled = currentSlide === 0;
+      document.getElementById('nextBtn').disabled = currentSlide === slides.length - 1;
+      document.getElementById('slideInfo').textContent = `Слайд ${currentSlide + 1} из ${slides.length}`;
+
+      const dots = document.getElementById('dots');
+      dots.innerHTML = slides.map((s, i) => `<button class="dot ${i === currentSlide ? 'active' : ''}" onclick="goToSlide(${i})">${s.id}</button>`).join('');
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); nextSlide(); }
+      else if (e.key === 'ArrowLeft') { e.preventDefault(); prevSlide(); }
+    });
+
+    render();
+  </script>
+</body>
+</html>
+
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
