@@ -1,369 +1,787 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Групповая родительская консультация</title>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: system-ui, -apple-system, sans-serif; min-height: 100vh; background: linear-gradient(135deg, #667eea, #764ba2); display: flex; flex-direction: column; }
-    .slide-container { flex: 1; position: relative; overflow: hidden; }
-    .slide { position: absolute; inset: 0; transition: all 0.5s ease-in-out; padding: 2rem; display: flex; flex-direction: column; }
-    .slide.stable { transform: translateX(0); opacity: 1; }
-    .slide.exiting-next { transform: translateX(-10%); opacity: 0; }
-    .slide.exiting-prev { transform: translateX(10%); opacity: 0; }
-    .slide.entering-next { transform: translateX(100%); opacity: 0; }
-    .slide.entering-prev { transform: translateX(-100%); opacity: 0; }
-    .nav-bar { background: rgba(255,255,255,0.8); backdrop-filter: blur(4px); box-shadow: 0 -4px 6px rgba(0,0,0,0.1); padding: 1rem; }
-    .nav-inner { max-width: 80rem; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; }
-    .nav-btn { padding: 0.75rem 1.5rem; border: none; border-radius: 0.5rem; font-weight: 600; cursor: pointer; font-size: 1rem; }
-    .nav-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .nav-btn.prev { background: #1f2937; color: white; }
-    .nav-btn.next { background: #2563eb; color: white; }
-    .dots { display: flex; gap: 0.25rem; flex-wrap: wrap; justify-content: center; }
-    .dot { width: 2.5rem; height: 2.5rem; border-radius: 50%; border: none; font-weight: 600; cursor: pointer; background: #e5e7eb; color: #374151; transition: all 0.2s; font-size: 0.875rem; }
-    .dot.active { background: #2563eb; color: white; transform: scale(1.1); }
-    .info-bar { max-width: 80rem; margin: 0.75rem auto 0; text-align: center; font-size: 0.875rem; color: #4b5563; }
-    h1 { font-size: 3.25rem; font-weight: 700; }
-    h2 { font-size: 3.875rem; font-weight: 700; }
-    h3 { font-size: 2.25rem; font-weight: 700; }
-    .card { background: white; padding: 1.5rem; border-radius: 0.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-    .stat-card { background: white; padding: 1.5rem; border-radius: 0.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-left: 4px solid #3b82f6; }
-    .speech-box { background: linear-gradient(135deg, #1f2937, #111827); color: white; padding: 1.5rem; border-radius: 0.5rem; margin-top: 1.5rem; }
-    .speech-box .label { font-size: 4.875rem; font-weight: 600; margin-bottom: 0.5rem; }
-    .speech-box p { font-size: 3rem; line-height: 1.6; }
-    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; flex: 1; }
-    .col-blue { background: #eff6ff; padding: 1.5rem; border-radius: 0.5rem; }
-    .col-purple { background: #faf5ff; padding: 1.5rem; border-radius: 0.5rem; }
-    .col-blue h3 { color: #1e3a5f; margin-bottom: 1rem; }
-    .col-purple h3 { color: #581c87; margin-bottom: 1rem; }
-    .col-blue li, .col-purple li { margin-bottom: 0.75rem; display: flex; align-items: flex-start; }
-    .col-blue li span:first-child { color: #3b82f6; margin-right: 0.75rem; }
-    .col-purple li span:first-child { color: #a855f7; margin-right: 0.75rem; }
-    .warning-box { background: #fef9c3; padding: 1rem; border-radius: 0.5rem; border-left: 4px solid #eab308; margin-top: 1.5rem; }
-    .level-card { padding: 1.5rem; border-radius: 0.5rem; border-width: 2px; border-style: solid; }
-    .level-card.yellow { background: #fef9c3; border-color: #facc15; }
-    .level-card.orange { background: #ffedd5; border-color: #fb923c; }
-    .level-card.red { background: #fee2e2; border-color: #f87171; }
-    .level-card.purple { background: #f3e8ff; border-color: #c084fc; }
-    .level-card.yellow h3 { color: #713f12; }
-    .level-card.orange h3 { color: #7c2d12; }
-    .level-card.red h3 { color: #7f1d1d; }
-    .level-card.purple h3 { color: #581c87; }
-    .level-card li { display: flex; align-items: flex-start; margin-bottom: 0.5rem; }
-    .level-card li span:first-child { margin-right: 0.75rem; }
-    .scenario-card { background: white; padding: 1.5rem; border-radius: 0.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-top: 4px solid #ef4444; }
-    .phrase-card { padding: 1.5rem; border-radius: 0.5rem; border-left: 4px solid; }
-    .phrase-card.green { background: #f0fdf4; border-color: #22c55e; }
-    .phrase-card.blue { background: #eff6ff; border-color: #3b82f6; }
-    .phrase-card.yellow { background: #fefce8; border-color: #eab308; }
-    .phrase-card.orange { background: #fff7ed; border-color: #f97316; }
-    .phrase-card.pink { background: #fdf2f8; border-color: #ec4899; }
-    .phrase-card.red { background: #fef2f2; border-color: #ef4444; }
-    .qa-item { background: white; border-radius: 0.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 1rem; overflow: hidden; }
-    .qa-q { padding: 1rem; cursor: pointer; font-weight: 600; color: #111827; background: white; border: none; width: 100%; text-align: left; font-size: 1rem; display: flex; align-items: center; }
-    .qa-q:hover { background: #f9fafb; }
-    .qa-a { padding: 0 1rem 1rem; color: #374151; display: none; border-top: 1px solid #e5e7eb; }
-    .qa-a.show { display: block; padding-top: 0.75rem; }
-    .conclusion-bg { background: linear-gradient(135deg, #312e81, #581c87, #831843); color: white; }
-    .conclusion-box { background: rgba(255,255,255,0.1); padding: 1.5rem; border-radius: 0.5rem; margin-bottom: 1.5rem; }
-    .conclusion-box h3 { margin-bottom: 1rem; }
-    .conclusion-box li { display: flex; align-items: flex-start; margin-bottom: 0.75rem; }
-    .conclusion-box.yellow { border: 2px solid #facc15; background: rgba(255,255,255,0.2); }
-    .conclusion-speech { background: rgba(0,0,0,0.3); padding: 1.5rem; border-radius: 0.5rem; margin-top: 1.5rem; }
-    .scrollable { overflow-y: auto; flex: 1; }
-    .space-y > * + * { margin-top: 1rem; }
-    .space-y-4 > * + * { margin-top: 1.5rem; }
-    .space-y-6 > * + * { margin-top: 1.5rem; }
-    ul { list-style: none; }
-    .title-slide { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; padding: 3rem; }
-    .title-slide h1 { color: white; margin-bottom: 1.5rem; }
-    .title-slide h2 { color: white; background: rgba(255,255,255,0.1); padding: 1.5rem; border-radius: 0.5rem; margin-bottom: 2rem; font-size: 1.5rem; }
-    .title-slide .info { background: rgba(255,255,255,0.2); padding: 2rem; border-radius: 0.5rem; color: white; margin-top: 3rem; }
-    .title-slide .info p { font-size: 1.25rem; margin-bottom: 1rem; }
-    .case-box { background: #eff6ff; padding: 2rem; border-radius: 0.5rem; border-left: 4px solid #3b82f6; }
-    .clinical-box { background: #faf5ff; padding: 1.5rem; border-radius: 0.5rem; border-left: 4px solid #a855f7; }
-    .video-box { background: #1f2937; color: white; padding: 3rem; border-radius: 0.5rem; text-align: center; }
-    .check-item { display: flex; align-items: flex-start; margin-bottom: 0.75rem; }
-    .check-item .icon { color: #16a34a; margin-right: 0.75rem; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Вся жизнь напоказ незнакомцам — родительская консультация</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F7F5F0;
+    --white:#FFFFFF;
+    --ink:#141B2E;
+    --ink-soft:#4B566B;
+    --muted:#7E8899;
+    --line:rgba(20,27,46,.10);
+    --coral:#FF6B5A;
+    --amber:#F5B942;
+    --teal:#20B2A5;
+    --blue:#3D7BD9;
+    --violet:#8172E8;
+    --danger:#E5484D;
+    --shadow:0 14px 38px rgba(20,27,46,.07);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:'Manrope',system-ui,-apple-system,'Segoe UI',sans-serif;
+    background:#080D19;
+    color:var(--ink);
+    overflow:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  button{font:inherit;cursor:pointer}
+  button:focus-visible{outline:2px solid var(--amber);outline-offset:3px}
+
+  /* ---------- App shell ---------- */
+  .app{height:100dvh;display:flex;flex-direction:column;background:radial-gradient(circle at 50% -20%,#1B2444 0%,#080D19 65%)}
+  .viewport{flex:1;min-height:0;position:relative;overflow:hidden;display:grid;place-items:center}
+  .stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform-origin:center center;will-change:transform}
+  .deck{width:100%;height:100%}
+
+  /* ---------- Slide base ---------- */
+  .slide{
+    position:relative;width:100%;height:100%;overflow:hidden;
+    background:var(--paper);padding:54px 70px 46px;
+    display:flex;flex-direction:column;
+    animation:deckIn .5s cubic-bezier(.22,1,.36,1) both;
+  }
+  .slide::before{
+    content:'';position:absolute;inset:0;pointer-events:none;
+    background:
+      radial-gradient(circle at 96% 4%,rgba(129,114,232,.07),transparent 32%),
+      radial-gradient(circle at 0% 100%,rgba(255,107,90,.055),transparent 35%);
+  }
+  .slide>*{position:relative;z-index:1}
+  @keyframes deckIn{from{opacity:0;transform:translateY(12px) scale(.994)}to{opacity:1;transform:none}}
+  .rise{animation:rise .55s cubic-bezier(.22,1,.36,1) both;animation-delay:var(--d,0s)}
+  @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+  .slide-head{flex:0 0 auto;margin-bottom:22px}
+  .eyebrow{
+    display:flex;align-items:center;gap:10px;margin-bottom:13px;
+    font-size:10.5px;font-weight:800;letter-spacing:.19em;text-transform:uppercase;
+    color:var(--accent,var(--coral));
+  }
+  .eyebrow-dot{width:7px;height:7px;border-radius:50%;background:currentColor;box-shadow:0 0 0 4px rgba(255,107,90,.14)}
+  .slide-title{font-size:40px;line-height:1.08;letter-spacing:-.035em;font-weight:800;color:var(--ink)}
+  .lead{margin-top:11px;font-size:15px;line-height:1.5;color:var(--ink-soft);max-width:930px}
+  .slide-body{flex:1;min-height:0;display:flex;flex-direction:column}
+  .slide-foot{
+    flex:0 0 auto;margin-top:16px;padding-top:12px;border-top:1px solid var(--line);
+    display:flex;justify-content:space-between;align-items:center;
+    font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#9AA3B2;
+  }
+  .slide-foot .mark{display:flex;align-items:center;gap:8px}
+  .slide-foot .mark i{width:8px;height:8px;border-radius:2px;background:var(--coral);display:inline-block;transform:rotate(45deg)}
+
+  .edge{
+    position:absolute;top:50%;transform:translateY(-50%);z-index:5;
+    width:42px;height:42px;border-radius:50%;border:1px solid var(--line);
+    background:rgba(255,255,255,.65);color:var(--ink);font-size:25px;line-height:1;
+    display:grid;place-items:center;opacity:0;transition:.25s ease;
+  }
+  .edge.prev{left:16px}.edge.next{right:16px}
+  .slide:hover .edge{opacity:.65}.edge:hover{opacity:1 !important;transform:translateY(-50%) scale(1.08)}
+  .edge.hidden{display:none}
+
+  /* ---------- Dark slides ---------- */
+  .slide.dark{background:linear-gradient(125deg,#0C1430 0%,#17204A 52%,#291C3E 100%);color:#fff}
+  .slide.dark::before{
+    background:
+      radial-gradient(circle at 85% 10%,rgba(129,114,232,.22),transparent 42%),
+      radial-gradient(circle at 8% 92%,rgba(245,185,66,.10),transparent 40%);
+  }
+  .slide.dark .slide-title,.slide.dark .eyebrow{color:#fff}
+  .slide.dark .eyebrow{color:var(--amber)}
+  .slide.dark .lead{color:rgba(255,255,255,.68)}
+  .slide.dark .slide-foot{border-color:rgba(255,255,255,.14);color:rgba(255,255,255,.5)}
+  .slide.dark .edge{background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.2);color:#fff}
+
+  /* ---------- Cover ---------- */
+  .cover{padding:58px 76px 46px}
+  .cover-grid{display:grid;grid-template-columns:1.06fr .94fr;gap:34px;align-items:center;flex:1}
+  .cover-tag{
+    display:inline-flex;align-items:center;gap:9px;padding:8px 14px;border-radius:999px;
+    border:1px solid rgba(245,185,66,.35);background:rgba(245,185,66,.08);
+    color:var(--amber);font-size:10px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;
+  }
+  .cover h1{font-size:60px;line-height:1.02;letter-spacing:-.05em;font-weight:800;margin:24px 0 18px;max-width:690px}
+  .cover h1 em{font-style:normal;color:var(--amber)}
+  .cover-sub{font-size:19px;line-height:1.45;color:rgba(255,255,255,.68);max-width:590px}
+  .cover-teacher{margin-top:34px;display:flex;align-items:center;gap:13px;font-size:13.5px;color:rgba(255,255,255,.62)}
+  .cover-avatar{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:13px;color:#1A1736;background:linear-gradient(135deg,#F5B942,#FF8A6B)}
+  .cover-meta{margin-top:7px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.36)}
+  .cover-visual{position:relative;height:460px;display:grid;place-items:center}
+  .cover-visual .ring{position:absolute;border:1px solid rgba(255,255,255,.12);border-radius:50%}
+  .r1{width:420px;height:420px}.r2{width:310px;height:310px;border-style:dashed;opacity:.7}
+  .cover-visual .glow{position:absolute;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(129,114,232,.34),transparent 68%);filter:blur(8px)}
+  .phone{
+    position:relative;width:222px;height:424px;border-radius:36px;padding:9px;
+    background:linear-gradient(160deg,#34406A,#1B2444 55%,#121A36);
+    box-shadow:0 32px 70px rgba(0,0,0,.45),inset 0 0 0 1px rgba(255,255,255,.12);
+  }
+  .phone-screen{height:100%;border-radius:28px;background:linear-gradient(180deg,#0F1733,#1A2244);position:relative;overflow:hidden;padding:32px 16px 16px}
+  .phone-notch{position:absolute;top:11px;left:50%;transform:translateX(-50%);width:66px;height:7px;border-radius:99px;background:rgba(255,255,255,.16)}
+  .phone-line{height:60px;border-radius:12px;background:rgba(255,255,255,.07);margin-bottom:10px;position:relative;overflow:hidden}
+  .phone-line::after{content:'';position:absolute;left:12px;right:12px;top:16px;height:7px;border-radius:9px;background:rgba(255,255,255,.16);box-shadow:0 16px 0 rgba(255,255,255,.09),0 32px 0 rgba(255,255,255,.07)}
+  .phone-line.live{background:linear-gradient(120deg,rgba(255,107,90,.22),rgba(245,185,66,.10));border:1px solid rgba(255,107,90,.32)}
+  .phone-live{position:absolute;top:14px;left:14px;font-size:8px;letter-spacing:.12em;color:#FF8A78;font-weight:800}
+  .notif{
+    position:absolute;z-index:3;display:flex;align-items:center;gap:9px;
+    background:#fff;color:#1A2237;border-radius:13px;padding:9px 12px;
+    font-size:11px;font-weight:700;box-shadow:0 14px 30px rgba(0,0,0,.3);
+    animation:float 5s ease-in-out infinite;
+  }
+  .notif b{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;font-size:13px}
+  .notif.a{top:52px;left:-30px;animation-delay:-.4s}
+  .notif.b{top:170px;right:-48px;animation-delay:-1.8s}
+  .notif.c{bottom:74px;left:-54px;animation-delay:-3.1s}
+  .notif.d{bottom:24px;right:-32px;animation-delay:-2.4s}
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+  .cover-chip{position:absolute;bottom:8px;right:2px;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.42)}
+
+  /* ---------- Slide 2: stats ---------- */
+  .stats-wrap{display:grid;grid-template-columns:1.02fr .98fr;gap:20px;flex:1;min-height:0}
+  .hero-stats{display:grid;grid-template-rows:1fr 1fr;gap:14px}
+  .hero-stat{
+    position:relative;overflow:hidden;border-radius:20px;padding:21px 25px;color:#fff;
+    background:linear-gradient(125deg,#1D2947,#111A31);display:flex;flex-direction:column;justify-content:center;
+  }
+  .hero-stat.alt{background:linear-gradient(125deg,#2D6BAE,#1E447E)}
+  .hero-stat .num{font-size:56px;line-height:1;font-weight:800;letter-spacing:-.055em}
+  .hero-stat .num small{font-size:24px;letter-spacing:-.02em}
+  .hero-stat .desc{margin-top:8px;font-size:13px;line-height:1.42;color:rgba(255,255,255,.76);max-width:420px}
+  .hero-stat .deco{position:absolute;right:-18px;bottom:-28px;font-size:118px;opacity:.10}
+  .mini-list{display:flex;flex-direction:column;gap:12px}
+  .mini-item{
+    background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px 16px;
+    display:flex;gap:13px;align-items:flex-start;box-shadow:var(--shadow);
+  }
+  .mini-ic{width:36px;height:36px;flex:0 0 36px;border-radius:11px;display:grid;place-items:center;font-size:17px;background:#FFF0EC}
+  .mini-item p{font-size:13px;line-height:1.42;color:var(--ink-soft)}
+  .mini-item p strong{color:var(--ink)}
+  .note-strip{
+    margin-top:14px;flex:0 0 auto;border-radius:13px;padding:11px 16px;
+    background:#ECF8F5;border:1px solid #CBE9E2;color:#146B62;
+    font-size:12.5px;line-height:1.4;display:flex;gap:10px;align-items:center;
+  }
+
+  /* ---------- Slide 3: case ---------- */
+  .case-grid{display:grid;grid-template-columns:1.12fr .88fr;gap:38px;align-items:center;flex:1}
+  .film-card{
+    position:relative;border-radius:22px;padding:38px 40px;
+    background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.15);
+  }
+  .film-card::before,.film-card::after{content:'';position:absolute;left:16px;right:16px;height:8px;opacity:.4;
+    background:repeating-linear-gradient(90deg,rgba(255,255,255,.55) 0 12px,transparent 12px 24px)}
+  .film-card::before{top:9px}.film-card::after{bottom:9px}
+  .film-label{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--amber);font-weight:800}
+  .film-title{font-size:42px;line-height:1.1;font-weight:800;letter-spacing:-.035em;margin-top:20px}
+  .film-caption{margin-top:14px;font-size:13px;color:rgba(255,255,255,.55)}
+  .film-actions{margin-top:26px;display:flex;align-items:center;gap:14px}
+  .play{width:48px;height:48px;flex:0 0 48px;border-radius:50%;background:var(--coral);display:grid;place-items:center;font-size:17px;color:#fff;box-shadow:0 10px 26px rgba(255,107,90,.35)}
+  .film-actions span{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.7)}
+  .question-card{border-radius:22px;padding:30px;background:linear-gradient(145deg,rgba(245,185,66,.14),rgba(255,107,90,.08));border:1px solid rgba(245,185,66,.28)}
+  .q-mark{font-size:60px;line-height:.8;color:var(--amber);font-weight:800}
+  .question-card h3{font-size:25px;line-height:1.22;margin:18px 0 14px;letter-spacing:-.02em}
+  .question-card p{font-size:13px;line-height:1.5;color:rgba(255,255,255,.62)}
+  .discuss{margin-top:22px;display:inline-flex;gap:8px;align-items:center;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--amber);font-weight:800}
+
+  /* ---------- Two-column slides ---------- */
+  .duo{display:grid;grid-template-columns:1fr 1fr;gap:18px;flex:1;min-height:0}
+  .duo-col{background:#fff;border:1px solid var(--line);border-radius:20px;padding:20px 22px;box-shadow:var(--shadow);border-top:4px solid var(--c,var(--blue))}
+  .duo-head{display:flex;align-items:center;gap:11px;margin-bottom:14px}
+  .duo-badge{width:36px;height:36px;flex:0 0 36px;border-radius:11px;display:grid;place-items:center;background:var(--soft,#EAF1FB);font-size:17px}
+  .duo-head h3{font-size:18px;letter-spacing:-.02em}
+  .duo-list{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+  .duo-item{background:var(--soft,#F3F6FA);border-radius:11px;padding:10px 12px;display:flex;gap:9px;font-size:12.3px;line-height:1.36;color:var(--ink-soft)}
+  .duo-item .n{font-size:10px;font-weight:800;color:var(--c,var(--blue));padding-top:1px}
+  .warning{
+    margin-top:14px;flex:0 0 auto;background:#FFF7DC;border:1px solid #F1DB98;border-left:4px solid var(--amber);
+    border-radius:13px;padding:12px 16px;display:flex;gap:11px;align-items:center;
+  }
+  .warning .ic{font-size:18px}
+  .warning p{font-size:13px;line-height:1.4;color:#5C4715}
+  .warning strong{color:#3F300C}
+
+  /* ---------- Escalation ---------- */
+  .stairs{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;align-items:end;flex:1;min-height:0;padding-top:6px}
+  .step{
+    position:relative;height:var(--h);background:#fff;border:1px solid var(--line);border-top:5px solid var(--c);
+    border-radius:17px;padding:15px 15px 14px;box-shadow:var(--shadow);display:flex;flex-direction:column;overflow:hidden;
+  }
+  .step::before{content:'↗';position:absolute;top:-13px;right:12px;width:23px;height:23px;border-radius:50%;background:var(--c);color:#fff;font-size:13px;display:grid;place-items:center;font-weight:800}
+  .step-level{font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;font-weight:800;color:var(--c)}
+  .step h3{font-size:14px;line-height:1.22;letter-spacing:-.015em;margin:7px 0 10px}
+  .step ul{list-style:none;display:flex;flex-direction:column;gap:7px}
+  .step li{position:relative;padding-left:13px;font-size:11.7px;line-height:1.33;color:var(--ink-soft)}
+  .step li::before{content:'';position:absolute;left:0;top:.52em;width:5px;height:5px;border-radius:50%;background:var(--c)}
+  .stairs-baseline{position:absolute;left:70px;right:70px;bottom:66px;height:1px;background:linear-gradient(90deg,transparent,rgba(20,27,46,.14),transparent)}
+
+  /* ---------- Scenarios ---------- */
+  .scenario-grid{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:14px;flex:1;min-height:0}
+  .scenario{position:relative;background:#fff;border:1px solid var(--line);border-left:4px solid var(--danger);border-radius:17px;padding:17px 20px;display:grid;grid-template-columns:48px 1fr;column-gap:14px;box-shadow:var(--shadow)}
+  .scenario .ic{grid-row:span 2;width:48px;height:48px;border-radius:13px;background:#FFF0EF;display:grid;place-items:center;font-size:22px}
+  .scenario .idx{position:absolute;right:17px;top:15px;font-size:9.5px;letter-spacing:.12em;font-weight:800;color:#B9C0CC}
+  .scenario h3{font-size:15px;letter-spacing:-.015em;margin-bottom:7px;padding-right:44px}
+  .scenario p{font-size:12.5px;line-height:1.43;color:var(--ink-soft)}
+
+  /* ---------- Parents ---------- */
+  .parent-grid{display:grid;grid-template-columns:repeat(6,1fr);grid-template-rows:1fr 1fr;gap:14px;flex:1;min-height:0}
+  .parent-card{grid-column:span 3;background:#fff;border:1px solid var(--line);border-radius:18px;padding:19px 21px;display:flex;gap:15px;align-items:center;box-shadow:var(--shadow);border-bottom:4px solid var(--c,var(--blue))}
+  .parent-card.small{grid-column:span 2;flex-direction:column;align-items:flex-start;justify-content:center;gap:9px}
+  .parent-ic{width:46px;height:46px;flex:0 0 46px;border-radius:14px;background:var(--soft,#EAF1FB);display:grid;place-items:center;font-size:22px}
+  .parent-card .txt{font-size:15px;line-height:1.35;font-weight:700;letter-spacing:-.015em}
+  .parent-card.small .txt{font-size:12.8px;line-height:1.38}
+  .parent-card .txt em{font-style:normal;color:var(--muted);font-weight:600}
+  .parent-card.highlight{background:linear-gradient(135deg,#1E2A49,#141B2E);border-color:transparent;color:#fff}
+  .parent-card.highlight .txt{color:#fff}
+  .parent-card.highlight .txt em{color:rgba(255,255,255,.6)}
+  .parent-card.highlight .parent-ic{background:rgba(245,185,66,.15)}
+
+  /* ---------- Actions ---------- */
+  .action-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;flex:1;min-height:0}
+  .action{background:#fff;border:1px solid var(--line);border-top:4px solid var(--c);border-radius:17px;padding:16px 19px;box-shadow:var(--shadow)}
+  .action h3{font-size:15.5px;letter-spacing:-.015em;display:flex;align-items:center;gap:9px}
+  .action h3 .lv{font-size:9.5px;letter-spacing:.1em;color:var(--c);font-weight:800;border:1px solid var(--c);border-radius:99px;padding:3px 8px}
+  .action ul{list-style:none;margin-top:11px;display:flex;flex-direction:column;gap:8px}
+  .action li{display:flex;gap:9px;font-size:12.5px;line-height:1.38;color:var(--ink-soft)}
+  .action li .check{color:var(--teal);font-weight:800}
+  .action-note{margin-top:12px;flex:0 0 auto;font-size:12px;color:var(--ink-soft);display:flex;align-items:center;gap:9px}
+  .action-note b{color:var(--coral)}
+
+  /* ---------- Phrases ---------- */
+  .phrase-grid{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:1fr 1fr;gap:13px;flex:1;min-height:0}
+  .phrase{position:relative;background:#fff;border:1px solid var(--line);border-left:4px solid var(--c);border-radius:16px;padding:15px 17px;display:flex;flex-direction:column;box-shadow:var(--shadow)}
+  .qmark{font-size:30px;line-height:.7;color:var(--c);opacity:.42;font-weight:800}
+  .phrase p{font-size:12.4px;line-height:1.43;font-style:italic;color:#2E3A50;margin-top:8px;flex:1}
+  .phrase .note{margin-top:9px;padding-top:8px;border-top:1px solid #ECEFF3;font-size:10.8px;line-height:1.35;color:#8993A3}
+
+  /* ---------- Q&A ---------- */
+  .qa-list{display:flex;flex-direction:column;gap:9px;flex:1;min-height:0}
+  .qa-row{background:#fff;border:1px solid var(--line);border-left:3px solid var(--blue);border-radius:14px;padding:11px 16px;display:grid;grid-template-columns:30px 1fr;gap:13px;box-shadow:var(--shadow)}
+  .qa-n{width:28px;height:28px;border-radius:9px;background:#EAF1FB;color:var(--blue);display:grid;place-items:center;font-size:11px;font-weight:800}
+  .qa-row h3{font-size:14px;letter-spacing:-.015em}
+  .qa-row p{margin-top:4px;font-size:12.2px;line-height:1.4;color:var(--ink-soft)}
+  .qa-row p b{color:var(--teal)}
+
+  /* ---------- Closing ---------- */
+  .closing .slide-title{font-size:40px}
+  .closing-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;flex:1;min-height:0}
+  .closing-col{background:rgba(255,255,255,.065);border:1px solid rgba(255,255,255,.13);border-radius:19px;padding:19px 22px}
+  .closing-col h3{font-size:17px;margin-bottom:13px;display:flex;align-items:center;gap:10px;letter-spacing:-.015em}
+  .closing-col ul{list-style:none;display:flex;flex-direction:column;gap:9px}
+  .closing-col li{display:flex;gap:10px;font-size:12.6px;line-height:1.42;color:rgba(255,255,255,.8)}
+  .closing-col li span{color:var(--amber);font-weight:800}
+  .closing-col.find li span{color:var(--coral)}
+  .key-conclusion{
+    margin-top:15px;flex:0 0 auto;border-radius:17px;padding:15px 20px;
+    background:linear-gradient(105deg,#F5B942,#FF8B6B);color:#241B35;
+    font-size:14.5px;line-height:1.45;font-weight:700;letter-spacing:-.01em;
+  }
+  .key-conclusion b{display:block;font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;margin-bottom:5px;opacity:.7}
+  .thanks{margin-top:11px;text-align:right;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.5)}
+
+  /* ---------- Controls ---------- */
+  .controls{
+    flex:0 0 72px;background:#0C1325;border-top:1px solid rgba(255,255,255,.08);
+    display:flex;align-items:center;justify-content:space-between;gap:18px;padding:0 28px;
+    box-shadow:0 -10px 30px rgba(0,0,0,.25);z-index:10;
+  }
+  .ctrl-group{display:flex;align-items:center;gap:8px}
+  .nav-btn{
+    border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#E7ECF6;
+    border-radius:11px;padding:10px 15px;font-size:12px;font-weight:700;transition:.2s ease;
+  }
+  .nav-btn:hover:not(:disabled){background:rgba(255,255,255,.14);transform:translateY(-1px)}
+  .nav-btn:disabled{opacity:.32;cursor:not-allowed}
+  .nav-btn.primary{background:var(--coral);border-color:var(--coral);color:#fff}
+  .nav-btn.primary:hover:not(:disabled){background:#FF7B6C}
+  .dots{display:flex;gap:5px;align-items:center;justify-content:center;flex-wrap:wrap}
+  .dot{
+    width:24px;height:24px;border-radius:8px;border:none;background:rgba(255,255,255,.1);color:rgba(255,255,255,.55);
+    font-size:9.5px;font-weight:800;transition:.2s ease;
+  }
+  .dot:hover{background:rgba(255,255,255,.22);color:#fff}
+  .dot.active{background:var(--amber);color:#231B36;box-shadow:0 0 0 3px rgba(245,185,66,.15)}
+  .counter{font-size:11px;font-weight:800;letter-spacing:.12em;color:rgba(255,255,255,.5);min-width:74px;text-align:center}
+  .counter b{color:#fff;font-size:14px}
+  .tool-btn{
+    width:36px;height:36px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:transparent;color:rgba(255,255,255,.7);
+    display:grid;place-items:center;font-size:14px;transition:.2s ease;
+  }
+  .tool-btn:hover,.tool-btn.on{background:rgba(255,255,255,.12);color:#fff}
+  .hint{font-size:10px;color:rgba(255,255,255,.35);letter-spacing:.04em;white-space:nowrap}
+
+  /* ---------- Overlays ---------- */
+  .overview{
+    position:fixed;inset:0;z-index:60;background:rgba(6,10,20,.96);backdrop-filter:blur(10px);
+    padding:46px 54px;display:none;flex-direction:column;color:#fff;
+  }
+  .overview.open{display:flex;animation:fadeIn .25s ease both}
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  .ov-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:26px}
+  .ov-head h2{font-size:26px;letter-spacing:-.03em}
+  .ov-head p{font-size:12px;color:rgba(255,255,255,.45);margin-top:5px}
+  .ov-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;overflow:auto;padding-right:6px}
+  .ov-card{
+    position:relative;text-align:left;border:1px solid rgba(255,255,255,.12);border-radius:15px;
+    background:rgba(255,255,255,.055);color:#fff;padding:18px 18px 18px 20px;min-height:112px;
+    display:flex;flex-direction:column;justify-content:space-between;transition:.2s ease;
+  }
+  .ov-card:hover{background:rgba(255,255,255,.12);transform:translateY(-3px);border-color:rgba(245,185,66,.5)}
+  .ov-card.current{border-color:var(--amber);background:rgba(245,185,66,.12)}
+  .ov-card::before{content:'';position:absolute;left:0;top:16px;bottom:16px;width:3px;border-radius:0 3px 3px 0;background:var(--c,var(--coral))}
+  .ov-num{font-size:10px;letter-spacing:.14em;color:rgba(255,255,255,.45);font-weight:800}
+  .ov-title{font-size:14px;line-height:1.3;font-weight:700;letter-spacing:-.015em}
+  .close-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:#fff;border-radius:10px;padding:9px 14px;font-size:12px;font-weight:700}
+
+  .notes{
+    position:fixed;left:50%;bottom:86px;transform:translateX(-50%) translateY(18px);z-index:50;
+    width:min(880px,92vw);background:#101A31;border:1px solid rgba(245,185,66,.35);border-radius:17px;
+    padding:17px 22px;color:#fff;box-shadow:0 24px 60px rgba(0,0,0,.5);display:none;
+  }
+  .notes.open{display:block;animation:notesIn .3s ease both}
+  @keyframes notesIn{to{transform:translateX(-50%) translateY(0)}}
+  .notes-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+  .notes-head span{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--amber);font-weight:800}
+  .notes p{font-size:13px;line-height:1.6;color:rgba(255,255,255,.8)}
+
+  @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms !important;transition-duration:.01ms !important}}
+  @media (max-width:900px){
+    .controls{padding:0 12px;gap:8px}
+    .hint,.counter{display:none}
+    .nav-btn{padding:9px 11px}
+    .dot{width:20px;height:20px;font-size:9px}
+  }
+</style>
 </head>
 <body>
-  <div class="slide-container" id="slideContainer"></div>
-  <div class="nav-bar">
-    <div class="nav-inner">
-      <button class="nav-btn prev" id="prevBtn" onclick="prevSlide()">← Назад</button>
-      <div class="dots" id="dots"></div>
-      <button class="nav-btn next" id="nextBtn" onclick="nextSlide()">Вперёд →</button>
+<div class="app">
+  <div class="viewport" id="viewport">
+    <div class="stage" id="stage"><div class="deck" id="deck"></div></div>
+  </div>
+  <div class="controls">
+    <div class="ctrl-group">
+      <button class="nav-btn" id="prevBtn" aria-label="Предыдущий слайд">← Назад</button>
+      <button class="nav-btn primary" id="nextBtn" aria-label="Следующий слайд">Вперёд →</button>
     </div>
-    <div class="info-bar">
-      <span id="slideInfo">Слайд 1 из 12</span>
-      <span style="margin: 0 0.5rem;">•</span>
-      <span>← → для навигации</span>
+    <div class="dots" id="dots"></div>
+    <div class="ctrl-group">
+      <span class="counter" id="counter"></span>
+      <button class="tool-btn" id="overviewBtn" title="Обзор слайдов (O)" aria-label="Обзор слайдов">▦</button>
+      <button class="tool-btn" id="notesBtn" title="Заметки спикера (N)" aria-label="Заметки спикера">☰</button>
+      <button class="tool-btn" id="fullBtn" title="Во весь экран (F)" aria-label="Во весь экран">⛶</button>
     </div>
   </div>
+</div>
 
-  <script>
-    const slides = [
-      {
-        id: 1, title: "Групповая родительская консультация", subtitle: "«Вся жизнь напоказ незнакомцам: что делать, если лайки важнее безопасности?»", type: 'title'
-      },
-      {
-        id: 2, title: "Почему это важно?", type: 'stats',
-        stats: [
-          { icon: '📊', text: 'Более 70 % подростков 13–17 лет ежедневно публикуют личный контент в социальных сетях' },
-          { icon: '🔓', text: 'Каждый третий подросток хотя бы раз делился информацией, которую позже хотел удалить' },
-          { icon: '⚠️', text: 'Гиперобщительность — коммуникативная девиация, при которой потребность в признании подавляет критическое мышление и чувство безопасности' },
-          { icon: '🔺', text: 'Без коррекции гиперобщительность не остаётся на одном уровне — она эскалирует, порождая всё более опасные формы поведения' },
-          { icon: '🎯', text: 'Задача консультации — показать, во что может перерасти безобидная, на первый взгляд, «общительность»' }
-        ],
-        speech: "Проблема не только в том, что ребёнок много общается. Гиперобщительность — это прогрессирующее отклонение. Если его не заметить и не скорректировать, оно не \"пройдёт само\", а перерастёт в гораздо более опасные формы поведения. Сегодня мы разберём, что именно может произойти и как этого не допустить."
-      },
-      {
-        id: 3, title: "Что случилось?", type: 'case',
-        caseText: "Пример из фильма Ингрид едет на запад",
-        clinical: "К какому виду девиаций вы бы отнесли данный фрагмент?"
-      },
-      {
-        id: 4, title: "Как это проявляется и почему возникает?", type: 'twocolumns',
-        leftTitle: "🔍 Характерные признаки", rightTitle: "🧩 Возможные причины",
-        leftItems: ['Неумение находиться в одиночестве', 'Болтливость, нефильтрованный речевой поток', 'Стремление быть в центре внимания любой ценой', 'Неумение слушать собеседника → конфликты', 'Использование других как «зеркала» для самовыражения', 'Отсутствие настроек приватности'],
-        rightItems: ['Дефицит эмоционального тепла в семье (гипоопека)', 'Попытки избежать одиночества и скуки', 'Нестабильная самооценка', 'Вымещение стресса через общение', 'СДВГ, тревожное расстройство', 'Тип воспитания: эмоциональное отвержение / гипоопека'],
-        warning: 'Главный парадокс: Ребёнок стремится к самостоятельности, но при этом максимально уязвим для манипуляций со стороны взрослых незнакомцев в сети.',
-        speech: "Подросток уязвим вдвойне. С одной стороны, ему нужно признание — и лайки дают его мгновенно. С другой — он чувствует себя неуязвимым: \"Со мной такого не случится\". Он не фильтрует речь, не осознаёт последствий и воспринимает сеть как территорию свободы от родителей. Именно поэтому гиперобщительность в подростковом возрасте так быстро перерастает в опасные формы."
-      },
-      {
-        id: 5, title: "«Просто общительность»? Куда она ведёт", type: 'escalation',
-        levels: [
-          { color: 'yellow', title: 'УРОВЕНЬ 1: «Безобидная общительность»', items: ['Много времени в чатах и соцсетях', 'Большое количество «друзей», которых ребёнок не знает лично', 'Частые публикации, желание получать лайки'] },
-          { color: 'orange', title: 'УРОВЕНЬ 2: Разглашение личных данных', items: ['Ребёнок публикует адрес, школу, расписание, обстановку квартиры', 'В прямых эфирах рассказывает о конфликтах с родителями, первой влюблённости, интимных переживаниях', 'Не использует настройки приватности — профиль открыт для всех', 'Незнакомые люди знают о ребёнке больше, чем родители'] },
-          { color: 'red', title: 'УРОВЕНЬ 3: Жизнь «напоказ»', items: ['Вся личная жизнь переносится в онлайн — ребёнок не различает публичное и приватное', 'Регулярные стримы с откровениями ради донатов и подписчиков', 'Формируется зависимость от виртуальной аудитории — без эфиров чувствует пустоту', 'Ребёнок начинает провоцировать скандалы, чтобы было «что рассказать» зрителям'] },
-          { color: 'purple', title: 'УРОВЕНЬ 4: Реальные угрозы безопасности', items: ['Сталкинг — незнакомцы, знающие адрес и распорядок, начинают преследовать ребёнка', 'Шантаж и манипуляции — интимные откровения используются против ребёнка', 'Вовлечение в деструктивные сообщества — «друзья» из сети втягивают в опасные группы', 'Мошенничество — доверие к незнакомцам приводит к финансовым и эмоциональным потерям', 'Кибербуллинг — публичные откровения становятся материалом для травли'] }
-        ],
-        speech: "Вот что важно понять: гиперобщительность — это не статичная проблема, это лестница. Сначала — просто много \"друзей\" в сети. Потом — ребёнок начинает делиться адресом, школой, конфликтами с вами. Дальше — вся жизнь переносится в онлайн, и без стрима ребёнок чувствует пустоту. И на верхней ступени — реальные угрозы: сталкинг, шантаж, вовлечение в деструктивные группы. В нашем кейсе девочка уже находится на втором-третьем уровне. И без вмешательства она неизбежно движется вверх."
-      },
-      {
-        id: 6, title: "Реальные сценарии: что может произойти", type: 'scenarios',
-        scenarios: [
-          { icon: '📍', title: 'СЦЕНАРИЙ 1: СТАЛКИНГ', text: 'Девочка в эфире показывает вид из окна, форму школы, рассказывает, во сколько возвращается домой. Незнакомый подписчик вычисляет адрес и начинает появляться рядом со школой или домом. Ребёнок пугается, но боится рассказать родителям, потому что «сама виновата».' },
-          { icon: '🔓', title: 'СЦЕНАРИЙ 2: ШАНТАЖ ЛИЧНЫМИ ДАННЫМИ', text: 'В прямом эфире девочка делится историей первой влюблённости, называет имена, показывает переписки. Один из зрителей сохраняет записи и угрожает разослать их одноклассникам или выложить на публичные форумы, если она не выполнит его требования.' },
-          { icon: '🕸️', title: 'СЦЕНАРИЙ 3: ВЕРБОВКА В ДЕСТРУКТИВНЫЕ СООБЩЕСТВА', text: '«Друзья» из сети проявляют сочувствие, выслушивают жалобы на родителей. Постепенно втягивают в закрытую группу с деструктивной идеологией, где «понимают и принимают». Ребёнок отдаляется от реальных близких.' },
-          { icon: '💸', title: 'СЦЕНАРИЙ 4: МОШЕННИЧЕСТВО И ЭКСПЛУАТАЦИЯ', text: 'Незнакомый подписчик присылает крупные донаты, завоёвывает доверие. Затем просит "одолжить" данные банковской карты родителей или сделать «одну маленькую услугу» — отправить компрометирующее фото.' }
-        ],
-        speech: "Это не фантазии — это реальные сценарии, которые происходят с подростками ежедневно. Сталкинг, шантаж, вербовка в деструктивные группы, мошенничество — всё это начинается с того, что ребёнок \"просто делится жизнью\" с незнакомцами в сети. Обратите внимание: в каждом сценарии ребёнок боится рассказать родителям. Именно поэтому критически важно сохранять доверие, а не ставить ультиматумы."
-      },
-      {
-        id: 7, title: "Почему именно подросток так уязвим?", type: 'twocolumns',
-        leftTitle: "🧠 Особенности возраста", rightTitle: "⚡ Как это усиливает эскалацию",
-        leftItems: ['Гормональные изменения → усиленная потребность в признании', 'Поиск идентичности → «Кто я? Чем я интересен?»', 'Давление сверстников → «Все так делают»', 'Сниженные процессы торможения', 'Склонность к риску, ощущение «неуязвимости»', 'Потребность в автономии от родителей'],
-        rightItems: ['Лайки и комментарии дают мгновенный выброс дофамина — формируется зависимость', 'Ребёнок конструирует «я» через реакции аудитории, а не через реальный опыт', 'Нормализация раскрытия личной жизни в сети: «Если все стримят — значит, это нормально»', 'Не может остановиться: говорит и публикует раньше, чем думает', '«Со мной такого не случится» — не осознаёт опасность сталкинга и шантажа', 'Сеть становится «территорией свободы», куда родители не допускаются'],
-        warning: 'Главный парадокс: Ребёнок стремится к самостоятельности, но при этом максимально уязвим для манипуляций со стороны взрослых незнакомцев в сети.',
-        speech: "Подросток уязвим вдвойне. С одной стороны, ему нужно признание — и лайки дают его мгновенно. С другой — он чувствует себя неуязвимым: \"Со мной такого не случится\". Он не фильтрует речь, не осознаёт последствий и воспринимает сеть как территорию свободы от родителей. Именно поэтому гиперобщительность в подростковом возрасте так быстро перерастает в опасные формы."
-      },
-      {
-        id: 8, title: "С чем вы столкнулись?", type: 'stats',
-        stats: [
-          { icon: '👁️', text: '«Не замечали вовремя» — поведение казалось «просто общительностью»' },
-          { icon: '🗣️', text: '«Начали разговор — получили конфликт» — запреты закрывают путь к доверию' },
-          { icon: '🤷', text: '«Не могу отличить норму от проблемы» — где грань между экспериментом и угрозой?' },
-          { icon: '💻', text: '«Ограничил интернет — потерял контакт» — жёсткие запреты разрушают отношения' },
-          { icon: '❓', text: '«Не знаю, к кому обратиться» — чувство беспомощности' }
-        ]
-      },
-      {
-        id: 9, title: "Что делать на каждом уровне?", type: 'recommendations',
-        levels: [
-          { color: 'yellow', title: 'На уровне 1 (много «друзей», лайки)', items: ['Разговор о цифровом следе: «То, что ты публикуешь, остаётся навсегда»', 'Совместная проверка списка друзей: «Скольких из них ты знаешь лично?»', 'Предложить офлайн-хобби как альтернативный источник признания'] },
-          { color: 'orange', title: 'На уровне 2 (разглашение личных данных)', items: ['Совместная настройка приватности — не за ребёнка, а вместе с ним', '«Тест незнакомца»: «Если бы этот человек подошёл к тебе на улице — ты бы рассказала ему то же самое?»', 'Ввести правило: «Прежде чем опубликовать — расскажи мне»'] },
-          { color: 'red', title: 'На уровне 3 (жизнь «напоказ», зависимость)', items: ['Временное ограничение стримов — как компромисс, а не наказание', 'Обращение к школьному психологу', '«Эксперимент тишины»: 24 часа без соцсетей с поддержкой родителя (совместный досуг)'] },
-          { color: 'purple', title: 'На уровне 4 (сталкинг, шантаж, угрозы)', items: ['Немедленно — сохранить доказательства (скриншоты, переписки)', 'Обращение в полицию и на горячую линию (8-800-2000-122)', 'Семейный психолог для восстановления доверия и проработки травмы'] }
-        ],
-        speech: "Действия зависят от уровня, на котором находится ваш ребёнок. На начальном этапе достаточно разговора и совместной настройки профиля. Если ребёнок уже публикует личные данные — вводим правило \"сначала расскажи мне\". Если есть зависимость от стримов — подключаем специалиста. А если появились реальные угрозы — сохраняем доказательства и обращаемся в полицию. Главное: на каждом уровне сохраняем диалог и доверие."
-      },
-      {
-        id: 10, title: "Что говорить ребёнку? Речевой лист", type: 'phrases',
-        phrases: [
-          { color: 'green', text: '«Я вижу, что тебе важно, чтобы тебя замечали. Давай вместе подумаем, где ещё ты можешь получать внимание и поддержку.»', note: '→ Признаём потребность, не обесцениваем' },
-          { color: 'blue', text: '«Я не запрещаю интернет, но я волнуюсь, когда незнакомые люди знают о тебе больше, чем я.»', note: '→ Выражаем беспокойство без давления' },
-          { color: 'yellow', text: '«Давай договоримся: прежде чем делиться личным в открытом эфире, ты можешь сначала рассказать мне. Я постараюсь услышать без критики.»', note: '→ Предлагаем себя как безопасное пространство' },
-          { color: 'orange', text: '«Представь, что этот человек из интернета стоит перед тобой на улице. Ты бы рассказала ему то же самое?»', note: '→ Развиваем критическое мышление через конкретный образ' },
-          { color: 'pink', text: '«Если кто-то из сети начнёт тебя пугать, требовать что-то или угрожать — ты можешь прийти ко мне. Я не буду ругать. Мы разберёмся вместе.»', note: '→ Открываем путь к доверию при эскалации' },
-          { color: 'red', text: '«Ты важна не за лайки, а сама по себе. Я хочу, чтобы ты это чувствовала не только в интернете, но и здесь, дома.»', note: '→ Даём безусловное принятие' }
-        ],
-        speech: "Обратите внимание на две новые фразы. \"Представь, что этот человек стоит перед тобой на улице\" — помогает ребёнку перевести виртуальное в реальное и осознать масштаб откровенности. А фраза \"Если кто-то начнёт пугать — приходи ко мне, я не буду ругать\" — критически важна для ситуаций шантажа и сталкинга. Ребёнок должен знать, что дорога домой всегда открыта."
-      },
-      {
-        id: 11, title: "Ваши вопросы — наши ответы", type: 'qa',
-        questions: [
-          { q: 'Как узнать, что проблема уже появилась?', a: 'Рост времени в сети → раздражительность при ограничениях → скрытность → обнаруживаете ребёнка в открытых эфирах с незнакомцами.' },
-          { q: 'Как начать разговор без конфликта?', a: '«Я»-высказывания: «Я заметил(а)… Мне важно…». Без оценок. Давать говорить ребёнку.' },
-          { q: 'Как отличить эксперимент от угрозы?', a: 'Эксперимент: есть контроль, адекватная реакция на просьбы. Угроза: нет фильтра, множество незнакомцев, неспособность остановиться.' },
-          { q: 'К кому обращаться?', a: 'Школьный психолог → педагог-психолог → семейный консультант → полиция (при угрозах).' },
-          { q: 'Как ограничить интернет без разрушения отношений?', a: 'Ограничение = компромисс. Совместное обсуждение, временные рамки, конкретная цель для снятия.' }
-        ]
-      },
-      {
-        id: 12, title: "Итоги и перспективы", type: 'conclusion',
-        findings: ['Гиперобщительность — это прогрессирующая коммуникативная девиация', 'Без коррекции она эскалирует: от «много друзей в сети» → через разглашение личных данных → к жизни «напоказ» → и вплоть до сталкинга, шантажа, вербовки', 'Каждый уровень эскалации требует своих мер реагирования', 'Ключевой фактор успешной коррекции — сохранение доверия между родителем и ребёнком'],
-        application: ['Использовать «лестницу эскалации» как диагностический инструмент: определить, на каком уровне ребёнок, и действовать соответственно', 'Применять речевые техники для развития критического мышления у подростков', 'Выстраивать партнёрство «педагог — родитель — ребёнок»', 'Проводить профилактические беседы до появления проблемы'],
-        mainConclusion: 'Гиперобщительность — это не «характер», а сигнал. И это сигнал, который усиливается. Чем раньше мы его услышим, тем меньше ступеней ребёнок успеет пройти на пути к реальной опасности.',
-        speech: "Главное, что я хочу, чтобы вы запомнили: гиперобщительность не стоит на месте. Она растёт, как снежный ком. Сегодня ребёнок \"просто стримит\", а завтра незнакомец знает его адрес. Но на каждом уровне есть инструменты, которые мы разобрали. И самый важный из них — это не запреты, не контроль, а доверие. Если ребёнок знает, что может прийти к вам без страха наказания — вы услышите о проблеме вовремя. Спасибо за внимание!"
-      }
-    ];
+<div class="overview" id="overview">
+  <div class="ov-head">
+    <div><h2>Обзор презентации</h2><p>Нажмите на слайд, чтобы перейти к нему · Esc — закрыть</p></div>
+    <button class="close-btn" id="ovClose">Закрыть ✕</button>
+  </div>
+  <div class="ov-grid" id="ovGrid"></div>
+</div>
 
-    let currentSlide = 0;
-    let animState = 'stable';
-    let animDir = 'next';
-    let animTimeout = null;
+<div class="notes" id="notes">
+  <div class="notes-head"><span>Заметки спикера</span><button class="close-btn" id="notesClose">Скрыть</button></div>
+  <p id="notesText"></p>
+</div>
 
-    function goToSlide(index) {
-      if (index < 0 || index >= slides.length || index === currentSlide) return;
-      animDir = index > currentSlide ? 'next' : 'prev';
-      animState = 'exiting';
-      if (animTimeout) clearTimeout(animTimeout);
-      render();
-      animTimeout = setTimeout(() => {
-        currentSlide = index;
-        animState = 'entering';
-        render();
-        setTimeout(() => { animState = 'stable'; render(); }, 500);
-      }, 500);
-    }
+<script>
+const slides = [
+  {
+    id:1, type:'cover', short:'Титульный слайд',
+    notes:'Тема консультации: «Вся жизнь напоказ незнакомцам: что делать, если лайки важнее безопасности?» Представьтесь и задайте рамку разговора: мы обсуждаем не «плохой интернет», а растущую потребность подростка в признании и её последствия.'
+  },
+  {
+    id:2, type:'stats', eyebrow:'01 / Актуальность', title:'Почему это важно?',
+    lead:'Проблема не в количестве общения. Гиперобщительность — прогрессирующая коммуникативная девиация, при которой потребность в признании подавляет критическое мышление и чувство безопасности.',
+    notes:'Проблема не только в том, что ребёнок много общается. Гиперобщительность — это прогрессирующее отклонение. Если его не заметить и не скорректировать, оно не «пройдёт само», а перерастёт в гораздо более опасные формы поведения. Сегодня мы разберём, что именно может произойти и как этого не допустить.'
+  },
+  {
+    id:3, type:'case', eyebrow:'02 / Кейс', title:'Что случилось?',
+    notes:'Покажите фрагмент из фильма «Ингрид едет на запад». Спросите группу: к какому виду девиаций вы бы отнесли этот фрагмент? Дайте 1–2 минуты на обсуждение в парах, затем выслушайте 2–3 ответа.'
+  },
+  {
+    id:4, type:'twocolumns', eyebrow:'03 / Признаки и причины', title:'Как это проявляется и почему возникает?',
+    leftTitle:'Характерные признаки', leftIcon:'🔍',
+    leftItems:['Неумение находиться в одиночестве','Болтливость, нефильтрованный речевой поток','Стремление быть в центре внимания любой ценой','Неумение слушать собеседника → конфликты','Использование других как «зеркала» для самовыражения','Отсутствие настроек приватности'],
+    rightTitle:'Возможные причины', rightIcon:'🧩',
+    rightItems:['Дефицит эмоционального тепла в семье (гипоопека)','Попытки избежать одиночества и скуки','Нестабильная самооценка','Вымещение стресса через общение','СДВГ, тревожное расстройство','Тип воспитания: эмоциональное отвержение / гипоопека'],
+    warning:'Ребёнок стремится к самостоятельности, но при этом максимально уязвим для манипуляций со стороны взрослых незнакомцев в сети.',
+    notes:'Подросток уязвим вдвойне. С одной стороны, ему нужно признание — и лайки дают его мгновенно. С другой — он чувствует себя неуязвимым: «Со мной такого не случится». Он не фильтрует речь, не осознаёт последствий и воспринимает сеть как территорию свободы от родителей. Именно поэтому гиперобщительность в подростковом возрасте так быстро перерастает в опасные формы.'
+  },
+  {
+    id:5, type:'escalation', eyebrow:'04 / Лестница эскалации', title:'«Просто общительность»? Куда она ведёт',
+    lead:'Гиперобщительность не стоит на месте — это лестница, по которой ребёнок поднимается, если никто не вмешается.',
+    levels:[
+      {c:'#E9B93B', soft:'#FFF8E1', h:284, level:'Уровень 01', title:'«Безобидная общительность»', items:['Много времени в чатах и соцсетях','Большое количество «друзей», которых ребёнок не знает лично','Частые публикации, желание получать лайки']},
+      {c:'#F08C4B', soft:'#FFF0E4', h:326, level:'Уровень 02', title:'Разглашение личных данных', items:['Публикует адрес, школу, расписание, обстановку квартиры','В эфирах — конфликты с родителями, первая влюблённость, интимные переживания','Профиль открыт: настройки приватности не используются','Незнакомые знают о ребёнке больше, чем родители']},
+      {c:'#E5484D', soft:'#FFF0F0', h:368, level:'Уровень 03', title:'Жизнь «напоказ»', items:['Личная жизнь полностью переносится в онлайн','Регулярные стримы с откровениями ради донатов и подписчиков','Зависимость от виртуальной аудитории: без эфиров — пустота','Ребёнок провоцирует скандалы, чтобы было «что рассказать»']},
+      {c:'#8172E8', soft:'#F1EEFF', h:410, level:'Уровень 04', title:'Реальные угрозы безопасности', items:['Сталкинг — преследование незнакомцами, знающими адрес и распорядок','Шантаж — интимные откровения используются против ребёнка','Вовлечение в деструктивные сообщества','Мошенничество — доверие к незнакомцам ведёт к потерям','Кибербуллинг — откровения становятся материалом для травли']}
+    ],
+    notes:'Вот что важно понять: гиперобщительность — это не статичная проблема, это лестница. Сначала — просто много «друзей» в сети. Потом ребёнок начинает делиться адресом, школой, конфликтами с вами. Дальше — вся жизнь переносится в онлайн, и без стрима ребёнок чувствует пустоту. И на верхней ступени — реальные угрозы: сталкинг, шантаж, вовлечение в деструктивные группы. В нашем кейсе девочка уже находится на втором-третьем уровне. И без вмешательства она неизбежно движется вверх.'
+  },
+  {
+    id:6, type:'scenarios', eyebrow:'05 / Сценарии', title:'Реальные сценарии: что может произойти',
+    scenarios:[
+      {ic:'📍',title:'Сталкинг',text:'Девочка показывает в эфире вид из окна, форму школы, рассказывает, во сколько возвращается домой. Незнакомый подписчик вычисляет адрес и появляется рядом со школой. Ребёнок боится рассказать родителям: «сама виновата».'},
+      {ic:'🔓',title:'Шантаж личными данными',text:'В прямом эфире — история первой влюблённости, имена, переписки. Зритель сохраняет записи и угрожает разослать их одноклассникам, если она не выполнит его требования.'},
+      {ic:'🕸️',title:'Вербовка в деструктивные сообщества',text:'«Друзья» из сети проявляют сочувствие, выслушивают жалобы на родителей и постепенно втягивают в закрытую группу с деструктивной идеологией, где «понимают и принимают». Ребёнок отдаляется от близких.'},
+      {ic:'💸',title:'Мошенничество и эксплуатация',text:'Подписчик присылает крупные донаты, завоёвывает доверие, затем просит «одолжить» данные банковской карты родителей или сделать «одну маленькую услугу» — отправить компрометирующее фото.'}
+    ],
+    notes:'Это не фантазии — это реальные сценарии, которые происходят с подростками ежедневно. Сталкинг, шантаж, вербовка в деструктивные группы, мошенничество — всё начинается с того, что ребёнок «просто делится жизнью» с незнакомцами в сети. Обратите внимание: в каждом сценарии ребёнок боится рассказать родителям. Поэтому критически важно сохранять доверие, а не ставить ультиматумы.'
+  },
+  {
+    id:7, type:'twocolumns', eyebrow:'06 / Уязвимость', title:'Почему именно подросток так уязвим?',
+    leftTitle:'Особенности возраста', leftIcon:'🧠',
+    leftItems:['Гормональные изменения → усиленная потребность в признании','Поиск идентичности: «Кто я? Чем я интересен?»','Давление сверстников: «Все так делают»','Сниженные процессы торможения','Склонность к риску, ощущение «неуязвимости»','Потребность в автономии от родителей'],
+    rightTitle:'Как это усиливает эскалацию', rightIcon:'⚡',
+    rightItems:['Лайки дают мгновенный выброс дофамина — формируется зависимость','«Я» конструируется через реакции аудитории, а не через реальный опыт','Нормализация раскрытия жизни: «Если все стримят — значит, это нормально»','Говорит и публикует раньше, чем успевает подумать','«Со мной такого не случится» — не видит опасность сталкинга и шантажа','Сеть — «территория свободы», куда родители не допускаются'],
+    warning:'Ребёнок стремится к самостоятельности, но при этом максимально уязвим для манипуляций со стороны взрослых незнакомцев в сети.',
+    notes:'Подросток уязвим вдвойне. С одной стороны, ему нужно признание — и лайки дают его мгновенно. С другой — он чувствует себя неуязвимым: «Со мной такого не случится». Он не фильтрует речь, не осознаёт последствий и воспринимает сеть как территорию свободы от родителей. Именно поэтому гиперобщительность в подростковом возрасте так быстро перерастает в опасные формы.'
+  },
+  {
+    id:8, type:'parents', eyebrow:'07 / Опыт родителей', title:'С чем вы столкнулись?',
+    lead:'Знакомые ситуации? Отметьте ту, которая ближе всего к вашей семье.',
+    parentCards:[
+      {ic:'👁️',c:'#3D7BD9',soft:'#EAF1FB',txt:'«Не замечали вовремя» — <em>поведение казалось «просто общительностью»</em>'},
+      {ic:'🗣️',c:'#FF6B5A',soft:'#FFF0EC',txt:'«Начали разговор — получили конфликт» — <em>запреты закрывают путь к доверию</em>'},
+      {ic:'🤷',c:'#F5B942',soft:'#FFF7E1',txt:'«Не могу отличить норму от проблемы» — <em>где грань между экспериментом и угрозой?</em>'},
+      {ic:'💻',c:'#8172E8',soft:'#F1EEFF',txt:'«Ограничил интернет — потерял контакт» — <em>жёсткие запреты разрушают отношения</em>'},
+      {ic:'❓',c:'#F5B942',soft:'#FFF7E1',txt:'«Не знаю, к кому обратиться» — <em>чувство беспомощности</em>',highlight:true}
+    ],
+    notes:'Предложите родителям выбрать одну из ситуаций и коротко поделиться опытом. ВАЖНО: не переходите к оценкам и советам — сначала признайте трудность. Этот слайд — переход от теории к практическим действиям.'
+  },
+  {
+    id:9, type:'actions', eyebrow:'08 / Решения', title:'Что делать на каждом уровне?',
+    levels:[
+      {c:'#E9B93B',lv:'Уровень 01',title:'Много «друзей», лайки',items:['Разговор о цифровом следе: «То, что ты публикуешь, остаётся навсегда»','Совместная проверка списка друзей: «Скольких из них ты знаешь лично?»','Офлайн-хобби как альтернативный источник признания']},
+      {c:'#F08C4B',lv:'Уровень 02',title:'Разглашение личных данных',items:['Настраиваем приватность не «за» ребёнка, а вместе с ним','«Тест незнакомца»: «Если бы он подошёл к тебе на улице — ты бы рассказала то же?»','Правило: «Прежде чем опубликовать — расскажи мне»']},
+      {c:'#E5484D',lv:'Уровень 03',title:'Жизнь «напоказ», зависимость',items:['Временное ограничение стримов — как компромисс, а не наказание','Обращение к школьному психологу','«Эксперимент тишины»: 24 часа без соцсетей с поддержкой родителя']},
+      {c:'#8172E8',lv:'Уровень 04',title:'Сталкинг, шантаж, угрозы',items:['Немедленно сохранить доказательства: скриншоты, переписки','Полиция и горячая линия: 8-800-2000-122','Семейный психолог — восстановление доверия и проработка травмы']}
+    ],
+    notes:'Действия зависят от уровня, на котором находится ваш ребёнок. На начальном этапе достаточно разговора и совместной настройки профиля. Если ребёнок уже публикует личные данные — вводим правило «сначала расскажи мне». Если есть зависимость от стримов — подключаем специалиста. А если появились реальные угрозы — сохраняем доказательства и обращаемся в полицию. Главное: на каждом уровне сохраняем диалог и доверие.'
+  },
+  {
+    id:10, type:'phrases', eyebrow:'09 / Речевой лист', title:'Что говорить ребёнку?',
+    lead:'Готовые формулировки, которые поддерживают контакт и не обесценивают чувства подростка.',
+    phrases:[
+      {c:'#20B2A5',text:'«Я вижу, что тебе важно, чтобы тебя замечали. Давай вместе подумаем, где ещё ты можешь получать внимание и поддержку.»',note:'Признаём потребность, не обесцениваем'},
+      {c:'#3D7BD9',text:'«Я не запрещаю интернет, но я волнуюсь, когда незнакомые люди знают о тебе больше, чем я.»',note:'Выражаем беспокойство без давления'},
+      {c:'#E9B93B',text:'«Давай договоримся: прежде чем делиться личным в открытом эфире, ты можешь сначала рассказать мне. Я постараюсь услышать без критики.»',note:'Предлагаем себя как безопасное пространство'},
+      {c:'#F08C4B',text:'«Представь, что этот человек из интернета стоит перед тобой на улице. Ты бы рассказала ему то же самое?»',note:'Развиваем критическое мышление через конкретный образ'},
+      {c:'#D9549A',text:'«Если кто-то из сети начнёт тебя пугать, требовать что-то или угрожать — ты можешь прийти ко мне. Я не буду ругать. Мы разберёмся вместе.»',note:'Открываем путь к доверию при эскалации'},
+      {c:'#E5484D',text:'«Ты важна не за лайки, а сама по себе. Я хочу, чтобы ты это чувствовала не только в интернете, но и здесь, дома.»',note:'Даём безусловное принятие'}
+    ],
+    notes:'Обратите внимание на две новые фразы. «Представь, что этот человек стоит перед тобой на улице» — помогает перевести виртуальное в реальное и осознать масштаб откровенности. А фраза «Если кто-то начнёт пугать — приходи ко мне, я не буду ругать» критически важна при шантаже и сталкинге. Ребёнок должен знать, что дорога домой всегда открыта.'
+  },
+  {
+    id:11, type:'qa', eyebrow:'10 / Вопросы и ответы', title:'Ваши вопросы — наши ответы',
+    questions:[
+      {q:'Как узнать, что проблема уже появилась?',a:'Рост времени в сети → раздражительность при ограничениях → скрытность → обнаруживаете ребёнка в открытых эфирах с незнакомцами.'},
+      {q:'Как начать разговор без конфликта?',a:'«Я»-высказывания: «Я заметил(а)… Мне важно…». Без оценок. Давать говорить ребёнку.'},
+      {q:'Как отличить эксперимент от угрозы?',a:'Эксперимент: есть контроль, адекватная реакция на просьбы. Угроза: нет фильтра, множество незнакомцев, неспособность остановиться.'},
+      {q:'К кому обращаться?',a:'Школьный психолог → педагог-психолог → семейный консультант → полиция (при угрозах).'},
+      {q:'Как ограничить интернет без разрушения отношений?',a:'Ограничение = компромисс. Совместное обсуждение, временные рамки, конкретная цель для снятия.'}
+    ],
+    notes:'Если времени мало, выберите 2–3 вопроса, которые чаще всего звучат в вашей группе. Отвечайте коротко и возвращайтесь к главному принципу: сохранение доверия важнее идеального контроля.'
+  },
+  {
+    id:12, type:'closing', eyebrow:'11 / Итоги', title:'Итоги и перспективы',
+    findings:[
+      'Гиперобщительность — прогрессирующая коммуникативная девиация',
+      'Без коррекции она эскалирует: «много друзей» → личные данные → жизнь «напоказ» → сталкинг, шантаж, вербовка',
+      'Каждый уровень требует своих мер реагирования',
+      'Ключевой фактор успешной коррекции — доверие между родителем и ребёнком'
+    ],
+    application:[
+      'Использовать «лестницу эскалации» как диагностический инструмент',
+      'Применять речевые техники для развития критического мышления',
+      'Выстраивать партнёрство «педагог — родитель — ребёнок»',
+      'Проводить профилактические беседы до появления проблемы'
+    ],
+    mainConclusion:'Гиперобщительность — это не «характер», а сигнал. И это сигнал, который усиливается. Чем раньше мы его услышим, тем меньше ступеней ребёнок успеет пройти на пути к реальной опасности.',
+    notes:'Главное, что я хочу, чтобы вы запомнили: гиперобщительность не стоит на месте. Она растёт, как снежный ком. Сегодня ребёнок «просто стримит», а завтра незнакомец знает его адрес. Но на каждом уровне есть инструменты, которые мы разобрали. И самый важный из них — не запреты и не контроль, а доверие. Если ребёнок знает, что может прийти к вам без страха наказания — вы услышите о проблеме вовремя. Спасибо за внимание!'
+  }
+];
 
-    function nextSlide() { goToSlide(currentSlide + 1); }
-    function prevSlide() { goToSlide(currentSlide - 1); }
+/* ---------- Rendering helpers ---------- */
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 
-    function getSlideClass() {
-      if (animState === 'exiting') return animDir === 'next' ? 'exiting-next' : 'exiting-prev';
-      if (animState === 'entering') return animDir === 'next' ? 'entering-next' : 'entering-prev';
-      return 'stable';
-    }
+function head(s){
+  if(s.type === 'cover') return '';
+  return `<div class="slide-head rise">
+    <div class="eyebrow"><span class="eyebrow-dot"></span>${esc(s.eyebrow)}</div>
+    <h1 class="slide-title">${esc(s.title)}</h1>
+    ${s.lead ? `<p class="lead">${esc(s.lead)}</p>` : ''}
+  </div>`;
+}
+function foot(i){
+  return `<div class="slide-foot">
+    <span class="mark"><i></i> Групповая родительская консультация</span>
+    <span>${String(i+1).padStart(2,'0')} / ${String(slides.length).padStart(2,'0')}</span>
+  </div>`;
+}
 
-    function renderSlide(slide) {
-      switch (slide.type) {
-        case 'title':
-          return `<div class="title-slide">
-            <div style="margin-bottom:2rem;"><span style="font-size:5rem;">📱</span></div>
-            <h1>Групповая родительская консультация</h1>
-            <h2>«Вся жизнь напоказ незнакомцам:<br/>что делать, если лайки важнее безопасности?»</h2>
-            <div class="info">
-              <p><strong>Преподаватель:</strong> Шайдулин Дмитрий</p>
-            </div>
-          </div>`;
+function coverBody(s){
+  return `<div class="cover-grid rise">
+    <div>
+      <span class="cover-tag">● Родительская консультация</span>
+      <h1>Вся жизнь напоказ<br><em>незнакомцам</em></h1>
+      <p class="cover-sub">Что делать, если лайки важнее безопасности?</p>
+      <div class="cover-teacher">
+        <div class="cover-avatar">ШД</div>
+        <div><div>Преподаватель: <b>Шайдулин Дмитрий</b></div><div class="cover-meta">Цифровая безопасность · Подростковая психология · Доверие в семье</div></div>
+      </div>
+    </div>
+    <div class="cover-visual" aria-hidden="true">
+      <div class="glow"></div><div class="ring r1"></div><div class="ring r2"></div>
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="phone-notch"></div>
+          <div class="phone-line"></div>
+          <div class="phone-line live"><span class="phone-live">● LIVE</span></div>
+          <div class="phone-line"></div>
+          <div class="phone-line"></div>
+        </div>
+      </div>
+      <div class="notif a"><b style="background:#FFE9E6">❤️</b> 12 новых лайков</div>
+      <div class="notif b"><b style="background:#E8F0FF">👤</b> Подписался незнакомец</div>
+      <div class="notif c"><b style="background:#FFF3D8">📍</b> «Где ты сейчас?»</div>
+      <div class="notif d"><b style="background:#EEE9FF">📹</b> Эфир уже идёт</div>
+      <div class="cover-chip">Публичное ↔ Приватное</div>
+    </div>
+  </div>`;
+}
 
-        case 'case':
-          return `<div style="height:100%;display:flex;flex-direction:column;padding:2rem;">
-            <h2 style="margin-bottom:2rem;color:#1f2937;">${slide.title}</h2>
-            <div class="space-y-6" style="flex:1;">
-              <div class="case-box"><p style="font-size:1.75rem;color:#1f2937;font-style:italic;">"${slide.caseText}"</p></div>
-              <div class="clinical-box"><p style="font-size:1.725rem;color:#1f2937;"><strong></strong> ${slide.clinical}</p></div>
-            </div>
-          </div>`;
+function statsBody(s){
+  return `
+  <div class="stats-wrap">
+    <div class="hero-stats">
+      <div class="hero-stat rise" style="--d:.05s">
+        <div class="num">70<small> %</small></div>
+        <div class="desc">подростков 13–17 лет ежедневно публикуют личный контент в социальных сетях</div>
+        <div class="deco">📱</div>
+      </div>
+      <div class="hero-stat alt rise" style="--d:.1s">
+        <div class="num">1 из 3</div>
+        <div class="desc">подросток хотя бы раз делился информацией, которую позже хотел удалить</div>
+        <div class="deco">🔓</div>
+      </div>
+    </div>
+    <div class="mini-list">
+      <div class="mini-item rise" style="--d:.14s"><div class="mini-ic">⚠️</div><p><strong>Гиперобщительность</strong> — коммуникативная девиация: потребность в признании подавляет критическое мышление и чувство безопасности.</p></div>
+      <div class="mini-item rise" style="--d:.19s"><div class="mini-ic">🔺</div><p><strong>Без коррекции не остаётся на месте</strong> — эскалирует, порождая всё более опасные формы поведения.</p></div>
+      <div class="mini-item rise" style="--d:.24s"><div class="mini-ic">🎯</div><p><strong>Задача консультации</strong> — показать, во что может перерасти безобидная на первый взгляд «общительность».</p></div>
+    </div>
+  </div>
+  <div class="note-strip rise" style="--d:.3s"><span>💡</span><span>Ключевая мысль: проблема не в количестве общения, а в том, что гиперобщительность прогрессирует.</span></div>`;
+}
 
-        case 'stats':
-          return `<div style="height:100%;display:flex;flex-direction:column;padding:2rem;">
-            <h2 style="margin-bottom:2rem;color:#1f2937;">${slide.title}</h2>
-            <div class="scrollable">
-              <div class="space-y-4">
-                ${slide.stats.map(s => `<div class="stat-card"><div style="display:flex;align-items:flex-start;"><span style="font-size:2rem;margin-right:1rem;">${s.icon}</span><p style="font-size:1.725rem;color:#374151;">${s.text}</p></div></div>`).join('')}
-              </div>
-            </div>
-          </div>`;
-          
-        case 'twocolumns':
-          return `<div style="height:100%;display:flex;flex-direction:column;padding:2rem;">
-            <h2 style="margin-bottom:1.5rem;color:#1f2937;">${slide.title}</h2>
-            <div class="two-col">
-              <div class="col-blue"><h3>${slide.leftTitle}</h3><div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">${slide.leftItems.map(i => `<div style="background:white;padding:1rem;border-radius:0.5rem;box-shadow:0 2px 4px rgba(0,0,0,0.1);display:flex;align-items:flex-start;"><span style="color:#3b82f6;margin-right:0.5rem;">•</span><span style="color:#374151;">${i}</span></div>`).join('')}</div></div>
-              <div class="col-purple"><h3>${slide.rightTitle}</h3><div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">${slide.rightItems.map(i => `<div style="background:white;padding:1rem;border-radius:0.5rem;box-shadow:0 2px 4px rgba(0,0,0,0.1);display:flex;align-items:flex-start;"><span style="color:#a855f7;margin-right:0.5rem;">•</span><span style="color:#374151;">${i}</span></div>`).join('')}</div></div>
-            </div>
-            ${slide.warning ? `<div class="warning-box"><p style="color:#1f2937;"><strong>⚠️ ${slide.warning}</strong></p></div>` : ''}
-          </div>`;
+function caseBody(s){
+  return `<div class="case-grid">
+    <div class="film-card rise">
+      <div class="film-label">Фрагмент фильма</div>
+      <div class="film-title">«Ингрид едет<br>на запад»</div>
+      <div class="film-caption">Кейс для группового обсуждения</div>
+      <div class="film-actions"><div class="play">▶</div><span>Разбор поведения героини</span></div>
+    </div>
+    <div class="question-card rise" style="--d:.12s">
+      <div class="q-mark">?</div>
+      <h3>К какому виду девиаций вы бы отнесли данный фрагмент?</h3>
+      <p>Сопоставьте поведение героини с признаками гиперобщительности и предложите свою версию.</p>
+      <div class="discuss">✦ Обсуждение в группе</div>
+    </div>
+  </div>`;
+}
 
-        case 'escalation':
-          return `<div style="height:100%;display:flex;flex-direction:column;padding:2rem;">
-            <h2 style="margin-bottom:1.5rem;color:#1f2937;">${slide.title}</h2>
-            <div style="flex:1;display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-content:start;">
-              ${slide.levels.map(l => `<div class="level-card ${l.color}"><h3 style="margin-bottom:1rem;">${l.title}</h3><ul>${l.items.map(i => `<li><span>→</span><span style="font-size:1.35rem;color:#374151;">${i}</span></li>`).join('')}</ul></div>`).join('')}
-            </div>
-          </div>`;
+function duoBlock(s, c1, soft1, c2, soft2, warning){
+  return `<div class="duo">
+    <div class="duo-col rise" style="--c:${c1};--soft:${soft1};--d:.05s">
+      <div class="duo-head"><div class="duo-badge">${s.leftIcon}</div><h3>${esc(s.leftTitle)}</h3></div>
+      <div class="duo-list">${s.leftItems.map((t,i)=>`<div class="duo-item"><span class="n">${String(i+1).padStart(2,'0')}</span><span>${esc(t)}</span></div>`).join('')}</div>
+    </div>
+    <div class="duo-col rise" style="--c:${c2};--soft:${soft2};--d:.12s">
+      <div class="duo-head"><div class="duo-badge">${s.rightIcon}</div><h3>${esc(s.rightTitle)}</h3></div>
+      <div class="duo-list">${s.rightItems.map((t,i)=>`<div class="duo-item"><span class="n">${String(i+1).padStart(2,'0')}</span><span>${esc(t)}</span></div>`).join('')}</div>
+    </div>
+  </div>
+  <div class="warning rise" style="--d:.2s"><span class="ic">⚠️</span><p><strong>Главный парадокс.</strong> ${esc(warning)}</p></div>`;
+}
 
-        case 'scenarios':
-          return `<div style="height:100%;display:flex;flex-direction:column;padding:2rem;">
-            <h2 style="margin-bottom:1.5rem;color:#1f2937;">${slide.title}</h2>
-            <div style="flex:1;display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
-              ${slide.scenarios.map(s => `<div class="scenario-card"><div style="display:flex;align-items:flex-start;margin-bottom:1rem;"><span style="font-size:2.5rem;margin-right:1rem;">${s.icon}</span><h3 style="color:#111827;">${s.title}</h3></div><p style="color:#374151;">${s.text}</p></div>`).join('')}
-            </div>
-          </div>`;
+function escalationBody(s){
+  return `<div class="stairs">
+    ${s.levels.map((l,i)=>`<div class="step rise" style="--c:${l.c};--h:${l.h}px;--d:${.05+i*.06}s">
+      <div class="step-level">${esc(l.level)}</div>
+      <h3>${esc(l.title)}</h3>
+      <ul>${l.items.map(t=>`<li>${esc(t)}</li>`).join('')}</ul>
+    </div>`).join('')}
+  </div>`;
+}
 
-        case 'recommendations':
-          return `<div style="height:100%;display:flex;flex-direction:column;padding:2rem;">
-            <h2 style="margin-bottom:1.5rem;color:#1f2937;">${slide.title}</h2>
-            <div style="flex:1;display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
-              ${slide.levels.map(l => `<div class="level-card ${l.color}"><h3 style="margin-bottom:1rem;">${l.title}</h3><ul>${l.items.map(i => `<li class="check-item"><span class="icon">✓</span><span style="color:#374151;">${i}</span></li>`).join('')}</ul></div>`).join('')}
-            </div>
-          </div>`;
+function scenariosBody(s){
+  return `<div class="scenario-grid">
+    ${s.scenarios.map((t,i)=>`<div class="scenario rise" style="--d:${.05+i*.06}s">
+      <div class="ic">${t.ic}</div>
+      <div class="idx">СЦЕНАРИЙ ${String(i+1).padStart(2,'0')}</div>
+      <h3>${esc(t.title)}</h3>
+      <p>${esc(t.text)}</p>
+    </div>`).join('')}
+  </div>`;
+}
 
-        case 'phrases':
-          return `<div style="height:100%;display:flex;flex-direction:column;padding:2rem;">
-            <h2 style="margin-bottom:1.5rem;color:#1f2937;">${slide.title}</h2>
-            <div class="scrollable space-y-4">
-              ${slide.phrases.map(p => `<div class="phrase-card ${p.color}"><p style="font-size:1.125rem;color:#1f2937;font-style:italic;margin-bottom:0.5rem;">${p.text}</p><p style="font-size:0.875rem;color:#6b7280;">${p.note}</p></div>`).join('')}
-            </div>
-          </div>`;
+function parentsBody(s){
+  const cards = s.parentCards.map((c,i)=>`<div class="parent-card ${i>2?'small':''} ${c.highlight?'highlight':''} rise" style="--c:${c.c};--soft:${c.soft};--d:${.05+i*.05}s">
+    <div class="parent-ic">${c.ic}</div><div class="txt">${c.txt}</div>
+  </div>`).join('');
+  return `<div class="parent-grid">${cards}</div>`;
+}
 
-        case 'qa':
-          return `<div style="height:100%;display:flex;flex-direction:column;padding:2rem;">
-            <h2 style="margin-bottom:1.5rem;color:#1f2937;">${slide.title}</h2>
-            <div class="scrollable space-y-4">
-              ${slide.questions.map((qa, i) => `<div class="qa-item"><button class="qa-q" onclick="toggleQA(${i})"><span style="margin-right:0.5rem;">❓</span> ${qa.q}</button><div class="qa-a" id="qa-${i}"><p style="color:#374151;"><strong>✅ ${qa.a}</strong></p></div></div>`).join('')}
-            </div>
-          </div>`;
+function actionsBody(s){
+  return `<div class="action-grid">
+    ${s.levels.map((l,i)=>`<div class="action rise" style="--c:${l.c};--d:${.05+i*.06}s">
+      <h3><span class="lv">${esc(l.lv)}</span>${esc(l.title)}</h3>
+      <ul>${l.items.map(t=>`<li><span class="check">✓</span><span>${esc(t)}</span></li>`).join('')}</ul>
+    </div>`).join('')}
+  </div>
+  <div class="action-note rise" style="--d:.3s"><b>✦</b> На каждом уровне сохраняем диалог и доверие — это главный инструмент,&nbsp;а не запреты и контроль.</div>`;
+}
 
-        case 'conclusion':
-          return `<div style="height:100%;display:flex;flex-direction:column;padding:2rem;" class="conclusion-bg">
-            <h2 style="margin-bottom:1.5rem;">${slide.title}</h2>
-            <div style="flex:1;" class="space-y-6">
-              <div class="conclusion-box"><h3>📌 Что мы выяснили:</h3><ul>${slide.findings.map(i => `<li><span style="color:#facc15;margin-right:0.75rem;">•</span><span>${i}</span></li>`).join('')}</ul></div>
-              <div class="conclusion-box"><h3>🔮 Как применять:</h3><ul>${slide.application.map(i => `<li><span style="color:#4ade80;margin-right:0.75rem;">✓</span><span>${i}</span></li>`).join('')}</ul></div>
-              <div class="conclusion-box yellow"><p style="font-size:1.125rem;"><strong>🔑 Главный вывод:</strong> ${slide.mainConclusion}</p></div>
-            </div>
-          </div>`;
+function phrasesBody(s){
+  return `<div class="phrase-grid">
+    ${s.phrases.map((p,i)=>`<div class="phrase rise" style="--c:${p.c};--d:${.04+i*.04}s">
+      <div class="qmark">“</div>
+      <p>${esc(p.text)}</p>
+      <div class="note">→ ${esc(p.note)}</div>
+    </div>`).join('')}
+  </div>`;
+}
 
-        default: return '';
-      }
-    }
+function qaBody(s){
+  return `<div class="qa-list">
+    ${s.questions.map((q,i)=>`<div class="qa-row rise" style="--d:${.04+i*.05}s">
+      <div class="qa-n">${String(i+1).padStart(2,'0')}</div>
+      <div><h3>${esc(q.q)}</h3><p><b>Ответ:</b> ${esc(q.a)}</p></div>
+    </div>`).join('')}
+  </div>`;
+}
 
-    function toggleQA(index) {
-      const el = document.getElementById('qa-' + index);
-      el.classList.toggle('show');
-    }
+function closingBody(s){
+  return `<div class="closing-grid">
+    <div class="closing-col find rise"><h3>📌 Что мы выяснили</h3><ul>${s.findings.map(t=>`<li><span>◆</span><span>${esc(t)}</span></li>`).join('')}</ul></div>
+    <div class="closing-col rise" style="--d:.08s"><h3>🔮 Как применять</h3><ul>${s.application.map(t=>`<li><span>✓</span><span>${esc(t)}</span></li>`).join('')}</ul></div>
+  </div>
+  <div class="key-conclusion rise" style="--d:.16s"><b>🔑 Главный вывод</b>${esc(s.mainConclusion)}</div>
+  <div class="thanks">Спасибо за внимание!</div>`;
+}
 
-    function render() {
-      const container = document.getElementById('slideContainer');
-      const slide = slides[currentSlide];
-      container.innerHTML = `<div class="slide ${getSlideClass()}">${renderSlide(slide)}</div>`;
+function body(s){
+  switch(s.type){
+    case 'cover': return coverBody(s);
+    case 'stats': return statsBody(s);
+    case 'case': return caseBody(s);
+    case 'twocolumns': return duoBlock(s,'#3D7BD9','#EAF1FB','#8172E8','#F1EEFF',s.warning);
+    case 'escalation': return escalationBody(s);
+    case 'scenarios': return scenariosBody(s);
+    case 'parents': return parentsBody(s);
+    case 'actions': return actionsBody(s);
+    case 'phrases': return phrasesBody(s);
+    case 'qa': return qaBody(s);
+    case 'closing': return closingBody(s);
+  }
+  return '';
+}
 
-      document.getElementById('prevBtn').disabled = currentSlide === 0;
-      document.getElementById('nextBtn').disabled = currentSlide === slides.length - 1;
-      document.getElementById('slideInfo').textContent = `Слайд ${currentSlide + 1} из ${slides.length}`;
+/* ---------- Navigation ---------- */
+let current = 0;
+function render(){
+  const s = slides[current];
+  const dark = ['cover','case','closing'].includes(s.type);
+  $('deck').innerHTML = `<section class="slide ${dark?'dark':''} ${s.type}">
+    ${head(s)}
+    <div class="slide-body">${body(s)}</div>
+    ${foot(current)}
+    <button class="edge prev ${current===0?'hidden':''}" onclick="go(-1)" aria-label="Назад">‹</button>
+    <button class="edge next ${current===slides.length-1?'hidden':''}" onclick="go(1)" aria-label="Вперёд">›</button>
+  </section>`;
+  $('prevBtn').disabled = current === 0;
+  $('nextBtn').disabled = current === slides.length-1;
+  $('counter').innerHTML = `<b>${String(current+1).padStart(2,'0')}</b> / ${slides.length}`;
+  $('notesText').textContent = s.notes || 'Заметок для этого слайда нет.';
+  document.querySelectorAll('.dot').forEach((d,i)=>{
+    d.classList.toggle('active', i===current);
+    d.setAttribute('aria-current', i===current ? 'true':'false');
+  });
+  document.querySelectorAll('.ov-card').forEach((c,i)=>c.classList.toggle('current', i===current));
+  scaleStage();
+}
+function go(step){
+  const next = Math.min(slides.length-1,Math.max(0,current+step));
+  if(next===current) return;
+  current = next;
+  render();
+}
+function jump(i){ current = Math.min(slides.length-1,Math.max(0,i)); closeOverview(); render(); }
 
-      const dots = document.getElementById('dots');
-      dots.innerHTML = slides.map((s, i) => `<button class="dot ${i === currentSlide ? 'active' : ''}" onclick="goToSlide(${i})">${s.id}</button>`).join('');
-    }
+function scaleStage(){
+  const v = $('viewport');
+  const scale = Math.min(v.clientWidth/1280, v.clientHeight/720);
+  $('stage').style.transform = `translate(-50%,-50%) scale(${scale})`;
+}
 
-    document.addEventListener('keydown', e => {
-      if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); nextSlide(); }
-      else if (e.key === 'ArrowLeft') { e.preventDefault(); prevSlide(); }
-    });
+function toggleOverview(force){
+  const ov = $('overview');
+  const open = force !== undefined ? force : !ov.classList.contains('open');
+  ov.classList.toggle('open',open);
+}
+function closeOverview(){ toggleOverview(false); }
+function toggleNotes(force){
+  const n = $('notes');
+  const open = force !== undefined ? force : !n.classList.contains('open');
+  n.classList.toggle('open',open);
+  $('notesBtn').classList.toggle('on',open);
+}
+function toggleFull(){
+  if(document.fullscreenElement) document.exitFullscreen();
+  else document.documentElement.requestFullscreen?.();
+}
 
-    render();
-  </script>
+/* ---------- Init ---------- */
+$('dots').innerHTML = slides.map((s,i)=>`<button class="dot" onclick="jump(${i})" title="${esc(s.short||s.title)}" aria-label="Слайд ${i+1}: ${esc(s.short||s.title)}">${i+1}</button>`).join('');
+$('ovGrid').innerHTML = slides.map((s,i)=>`<button class="ov-card" style="--c:${['#FF6B5A','#3D7BD9','#F5B942','#3D7BD9','#E9B93B','#E5484D','#8172E8','#20B2A5','#F08C4B','#D9549A','#3D7BD9','#F5B942'][i]}" onclick="jump(${i})">
+  <span class="ov-num">СЛАЙД ${String(i+1).padStart(2,'0')}</span>
+  <span class="ov-title">${esc(s.short||s.title)}</span>
+</button>`).join('');
+
+$('prevBtn').onclick = ()=>go(-1);
+$('nextBtn').onclick = ()=>go(1);
+$('overviewBtn').onclick = ()=>toggleOverview();
+$('ovClose').onclick = closeOverview;
+$('notesBtn').onclick = ()=>toggleNotes();
+$('notesClose').onclick = ()=>toggleNotes(false);
+$('fullBtn').onclick = toggleFull;
+$('overview').addEventListener('click',e=>{ if(e.target===$('overview')) closeOverview(); });
+
+window.addEventListener('resize',scaleStage);
+document.addEventListener('keydown',e=>{
+  if(['ArrowRight','PageDown',' '].includes(e.key)){ e.preventDefault(); go(1); }
+  else if(['ArrowLeft','PageUp'].includes(e.key)){ e.preventDefault(); go(-1); }
+  else if(e.key==='Home'){ e.preventDefault(); jump(0); }
+  else if(e.key==='End'){ e.preventDefault(); jump(slides.length-1); }
+  else if(e.key.toLowerCase()==='o'){ toggleOverview(); }
+  else if(e.key.toLowerCase()==='n'){ toggleNotes(); }
+  else if(e.key.toLowerCase()==='f'){ toggleFull(); }
+  else if(e.key==='Escape'){ closeOverview(); toggleNotes(false); }
+});
+
+render();
+</script>
 </body>
-</html>
-
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
 </html>
